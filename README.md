@@ -1,2 +1,2 @@
 # streamroot-test
-Technical test for a Streamroot developer position. 
+Technical test for a Streamroot developer position.

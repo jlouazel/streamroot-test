@@ -77,9 +77,9 @@
           </div>
         </div>
       </div>
-      <form action="#">
+      <form ng-submit="post()">
         <div class="input-group">
-          <input type="text" placeholder="Enter your message here" class="form-control">
+          <input type="text" placeholder="Enter your message here" ng-model="message" class="form-control">
           <span class="input-group-btn">
             <button type="button" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
           </span>

@@ -3,6 +3,7 @@
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, Conversation) {
   $scope.message = '';
+  $scope.messageQueue = [];
 
   var servers = null,
   sendChannel,
@@ -104,6 +105,8 @@ angular.module('streamrootTestApp')
   function handleMessage(event) {
     console.log(event);
     console.log('Received message: ' + event.data);
+
+    $scope.messageQueue.push({text: event.data});
     // document.getElementById("dataChannelReceive").value = event.data;
   }
 

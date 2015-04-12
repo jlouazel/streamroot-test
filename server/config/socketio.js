@@ -64,14 +64,14 @@ module.exports = function (socketio) {
     function log(){
       var array = [">>> Message from server:"];
       array.push.apply(array, arguments);
-      socket.emit('log', array);
+      // socket.emit('log', array);
     }
 
-    socket.on('message', function (message) {
+    socket.on('message', function (message, room) {
       log('Client said:', message);
       console.log(message);
       // for a real app, would be room only (not broadcast)
-      socket.broadcast.emit('message', message,  socket.id);
+      socketio.sockets.in(room).emit('message', message,  socket.id, socket.decoded_token._id);
     });
 
     socket.on('create or join', function (room) {
@@ -86,6 +86,8 @@ module.exports = function (socketio) {
         }
       }
 
+      console.log(_room);
+
       log('Room ' + room + ' has ' + numClients + ' client(s)');
       if (numClients === 0){
         console.log('>>>>> created');
@@ -94,7 +96,7 @@ module.exports = function (socketio) {
       } else if (numClients <= 5) {
         console.log('>>>>> joined');
         socket.join(room);
-        socket.broadcast.emit('joined', room, socket.id, socket.decoded_token);
+        socket.emit('joined', room, socket.id);
         socketio.sockets.in(room).emit('ready');
 
       } else { // max two clients

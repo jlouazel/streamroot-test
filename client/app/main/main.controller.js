@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth) {
+.controller('MainCtrl', function ($scope, socket, Auth, User) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
   $scope.clientId = null;
@@ -15,7 +15,7 @@ angular.module('streamrootTestApp')
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
-  var room = 'plop';
+  $scope.room = 'plop';
 
   socket.socket.on('ipaddr', function (ipaddr) {
     console.log('Server IP address is: ' + ipaddr);
@@ -24,15 +24,13 @@ angular.module('streamrootTestApp')
 
   socket.socket.on('created', function (room, clientId) {
     $scope.clientId = clientId;
-    console.log('Created room', room, '- my client ID is', clientId);
+    console.log('Created room', $scope.room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
-  socket.socket.on('joined', function (room, clientId, userId) {
-    $scope.clientsPool.push(clientId);
-    // $scope.clientId = clientId;
-
-    console.log('This peer has joined room', room, 'with client ID', clientId, 'and user ID', userId);
+  socket.socket.on('joined', function (room, clientId) {
+    $scope.clientId = clientId;
+    console.log('This peer has joined room', room, 'with client ID', clientId);
     isInitiator = false;
   });
 
@@ -48,21 +46,18 @@ angular.module('streamrootTestApp')
     console.log.apply(console, array);
   });
 
-  socket.socket.on('message', function (message, clientId){
-    // $scope.messageQueue.push({
-    //   content: message,
-    //   sender: clientId
-    // });
+  socket.socket.on('message', function (message, clientId, userId) {
     console.log('Client ', clientId,  ' received message:', message);
 
-    if (!message.type)
+    if (!message.type && clientId != $scope.clientId) {
       $scope.messageQueue.push({content: message, sender: clientId});
+    }
     else
-      signalingMessageCallback(message, clientId);
+    signalingMessageCallback(message, clientId);
   });
 
   // Join a room
-  socket.socket.emit('create or join', room);
+  socket.socket.emit('create or join', $scope.room);
 
   if (location.hostname.match(/localhost|127\.0\.0/)) {
     socket.socket.emit('ipaddr');
@@ -76,7 +71,7 @@ angular.module('streamrootTestApp')
       socket.socket.emit('message', message);
     } else {
       console.log('Client sending message: ', $scope.message);
-      socket.socket.emit('message', $scope.message);
+      socket.socket.emit('message', $scope.message, $scope.room);
 
       $scope.messageQueue.push({
         content: $scope.message,
@@ -104,7 +99,6 @@ angular.module('streamrootTestApp')
 
     } else if (message.type === 'candidate') {
       peerConn.addIceCandidate(new RTCIceCandidate({candidate: message.candidate}));
-      // $scope.clientPool.push(clientId);
 
     } else if (message === 'bye') {
       // TODO: cleanup RTC connection?

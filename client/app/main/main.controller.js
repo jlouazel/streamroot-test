@@ -5,7 +5,13 @@ angular.module('streamrootTestApp')
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
-  function makeUserConnected() {
+  User.getAll().$promise.then(function(users) {
+    $scope.users = users;
+
+    _.remove($scope.users, {
+      _id: $scope.getCurrentUser()._id
+    });
+
     User.getConnected().$promise.then(function(connectedUsers) {
 
       angular.forEach(connectedUsers, function(user) {
@@ -15,19 +21,8 @@ angular.module('streamrootTestApp')
           found.connected = true;
           $scope.numConnectedUsers++;
         }
-        console.log($scope.users);
       });
     });
-  }
-
-  User.getAll().$promise.then(function(users) {
-    $scope.users = users;
-
-    _.remove($scope.users, {
-      _id: $scope.getCurrentUser()._id
-    });
-
-    makeUserConnected();
   });
 
 
@@ -46,7 +41,7 @@ angular.module('streamrootTestApp')
 
 
   socket.socket.on('live', function(clientId, userId) {
-    console.log(User.get(userId))
+    _.find($scope.users, {'_id': userId}).connected = true;
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
@@ -137,8 +132,6 @@ angular.module('streamrootTestApp')
   }
 
   function createPeerConnection(isInitiator, config) {
-    makeUserConnected();
-
     console.log('Creating Peer connection as initiator?', isInitiator, 'config:', config);
     peerConn = new RTCPeerConnection(config);
 

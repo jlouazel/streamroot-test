@@ -3,7 +3,7 @@
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _) {
   $scope.getCurrentUser = Auth.getCurrentUser;
-  $scope.connectedUsers = 0;
+  $scope.numConnectedUsers = 0;
 
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
@@ -11,7 +11,21 @@ angular.module('streamrootTestApp')
     _.remove($scope.users, {
       _id: $scope.getCurrentUser()._id
     });
+
+    User.getConnected().$promise.then(function(connectedUsers) {
+
+      angular.forEach(connectedUsers, function(user) {
+        var found = _.find($scope.users, {'_id': user});
+
+        if (found) {
+          found.connected = true;
+          $scope.numConnectedUsers++;
+        }
+        console.log($scope.users);
+      });
+    });
   });
+
 
   $scope.clientId = null;
 
@@ -96,7 +110,6 @@ angular.module('streamrootTestApp')
 
     }
   }
-
 
   var peerConn;
   var dataChannel;

@@ -1,19 +1,55 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth) {
+.controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
   $scope.getCurrentUser = Auth.getCurrentUser;
+  $scope.numConnectedUsers = 0;
+
+  User.getAll().$promise.then(function(users) {
+    $scope.users = users;
+
+    _.remove($scope.users, {
+      _id: $scope.getCurrentUser()._id
+    });
+
+    User.getConnected().$promise.then(function(connectedUsers) {
+
+      angular.forEach(connectedUsers, function(user) {
+        var found = _.find($scope.users, {'_id': user});
+
+        if (found) {
+          found.connected = true;
+          $scope.numConnectedUsers++;
+        }
+      });
+    });
+  });
 
   $scope.clientId = null;
 
   $scope.message = '';
   $scope.messageQueue = [];
 
+  $scope.clientsPool = [];
+
   var isInitiator = false;
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
-  var room = 'plop';
+  $scope.room = 'plop';
+
+
+  socket.socket.on('alive', function(clientId, userId) {
+    var user = _.find($scope.users, {'_id': userId});
+    if (user) {
+      user.connected = true;
+      $scope.numConnectedUsers++;
+    }
+  });
+
+  socket.socket.on('dead', function(socketid, userId) {
+    _.find($scope.users, {'_id': userId}).connected = false;
+  });
 
   socket.socket.on('ipaddr', function (ipaddr) {
     console.log('Server IP address is: ' + ipaddr);
@@ -22,16 +58,17 @@ angular.module('streamrootTestApp')
 
   socket.socket.on('created', function (room, clientId) {
     $scope.clientId = clientId;
-    console.log('Created room', room, '- my client ID is', clientId);
+    console.log('Created room', $scope.room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
   socket.socket.on('joined', function (room, clientId) {
     $scope.clientId = clientId;
-
     console.log('This peer has joined room', room, 'with client ID', clientId);
     isInitiator = false;
   });
+
+
 
   socket.socket.on('ready', function () {
     createPeerConnection(isInitiator, configuration);
@@ -41,18 +78,22 @@ angular.module('streamrootTestApp')
     console.log.apply(console, array);
   });
 
-  socket.socket.on('message', function (message, clientId){
-
-    $scope.messageQueue.push({
-      content: message,
-      sender: clientId
-    });
+  socket.socket.on('message', function (message, clientId, userId) {
     console.log('Client ', clientId,  ' received message:', message);
-    signalingMessageCallback(message);
+
+    if (!message.type && clientId != $scope.clientId) {
+      var user = _.find($scope.users, {'_id': userId});
+      $scope.messageQueue.push({content: message, sender: user});
+      $timeout(function() {
+        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+      }, 100);
+    }
+    else
+    signalingMessageCallback(message, clientId);
   });
 
   // Join a room
-  socket.socket.emit('create or join', room);
+  socket.socket.emit('create or join', $scope.room);
 
   if (location.hostname.match(/localhost|127\.0\.0/)) {
     socket.socket.emit('ipaddr');
@@ -61,23 +102,32 @@ angular.module('streamrootTestApp')
   /**
   * Send message to signaling server
   */
-  $scope.sendMessage = function(){
-    console.log('Client sending message: ', $scope.message);
-    socket.socket.emit('message', $scope.message);
+  $scope.sendMessage = function(message) {
+    if (message) {
+      socket.socket.emit('message', message);
+    } else {
+      console.log('Client sending message: ', $scope.message);
+      socket.socket.emit('message', $scope.message, $scope.room);
 
-    $scope.messageQueue.push({
-      content: $scope.message,
-      sender: $scope.getCurrentUser()._id
-    });
+      $scope.messageQueue.push({
+        content: $scope.message,
+        sender: $scope.getCurrentUser()
+      });
 
-    $scope.message = '';
+
+      $timeout(function() {
+        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+      }, 100);
+
+      $scope.message = '';
+
+    }
   }
-
 
   var peerConn;
   var dataChannel;
 
-  function signalingMessageCallback(message) {
+  function signalingMessageCallback(message, clientId) {
     if (message.type === 'offer') {
       console.log('Got offer. Sending answer to peer.');
       peerConn.setRemoteDescription(new RTCSessionDescription(message), function(){}, logError);
@@ -103,12 +153,13 @@ angular.module('streamrootTestApp')
     peerConn.onicecandidate = function (event) {
       console.log('onIceCandidate event:', event);
       if (event.candidate) {
-        //  sendMessage({
-        //   type: 'candidate',
-        //   label: event.candidate.sdpMLineIndex,
-        //   id: event.candidate.sdpMid,
-        //   candidate: event.candidate.candidate
-        // });
+        $scope.sendMessage({
+          type: 'candidate',
+          label: event.candidate.sdpMLineIndex,
+          id: event.candidate.sdpMid,
+          candidate: event.candidate.candidate
+        });
+
       } else {
         console.log('End of candidates.');
       }

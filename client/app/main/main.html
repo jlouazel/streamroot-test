@@ -1,8 +1,9 @@
 <div ng-include="'components/navbar/navbar.html'"></div>
 
+
 <div class="col-md-12">
   <div class="col-md-8">
-    <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: hidden; outline: none;">
+    <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
       <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in messageQueue">
         <div class="chat-contact">
           <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">

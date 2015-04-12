@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth, User, _) {
+.controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
@@ -102,7 +102,7 @@ angular.module('streamrootTestApp')
   $scope.sendMessage = function(message) {
     if (message) {
       socket.socket.emit('message', message);
-    } else if ($scope.message){
+    } else {
       console.log('Client sending message: ', $scope.message);
       socket.socket.emit('message', $scope.message, $scope.room);
 
@@ -110,6 +110,11 @@ angular.module('streamrootTestApp')
         content: $scope.message,
         sender: $scope.getCurrentUser()
       });
+
+
+      $timeout(function() {
+        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+      }, 100);
 
       $scope.message = '';
 

@@ -10,10 +10,12 @@ clientsCounter = 0;
 
 // When the user disconnects.. perform this
 function onDisconnect(socket) {
+  clientsCounter--;
 }
 
 // When the user connects.. perform this
 function onConnect(socket) {
+
   // When the client emits 'info', this listens and executes
   socket.on('info', function (data) {
     console.info('[%s] %s', socket.address, JSON.stringify(data, null, 2));
@@ -40,6 +42,8 @@ module.exports = function (socketio) {
   // }));
 
   socketio.on('connection', function (socket) {
+    console.log('> [CONNECTION]');
+
     socket.address = socket.handshake.address !== null ?
     socket.handshake.address.address + ':' + socket.handshake.address.port :
     process.env.DOMAIN;
@@ -48,7 +52,6 @@ module.exports = function (socketio) {
 
     // Call onDisconnect.
     socket.on('disconnect', function () {
-      clientsCounter--;
       onDisconnect(socket);
       console.info('[%s] DISCONNECTED', socket.address);
     });
@@ -68,28 +71,33 @@ module.exports = function (socketio) {
       log('Client said:', message);
       console.log(message);
       // for a real app, would be room only (not broadcast)
-      socket.broadcast.emit('message', message);
+      socket.broadcast.emit('message', message,  socket.id);
     });
 
     socket.on('create or join', function (room) {
-      clientsCounter++;
       // log('Request to create or join room ' + room);
 
       // var numClients = socketio.sockets.clients(room).length;
       // log('Room ' + room + ' has ' + numClients + ' client(s)');
 
       if (clientsCounter === 0){
+        console.log('>>>>> created');
         socket.join(room);
         socket.emit('created', room, socket.id);
 
-      } else if (clientsCounter === 1) {
+      } else if (clientsCounter >= 1 && clientsCounter <= 5) {
+        console.log('>>>>> joined');
+
         socket.join(room);
         socket.emit('joined', room, socket.id);
         socketio.sockets.in(room).emit('ready');
 
       } else { // max two clients
+        console.log('>>>>> full');
         socket.emit('full', room);
       }
+      clientsCounter++;
+
     });
 
     socket.on('ipaddr', function () {

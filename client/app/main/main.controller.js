@@ -1,8 +1,10 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket) {
-  socket.syncUpdates('chat', $scope.awesomeThings);
+.controller('MainCtrl', function ($scope, socket, Auth) {
+  $scope.getCurrentUser = Auth.getCurrentUser;
+
+  $scope.clientId = null;
 
   $scope.message = '';
   $scope.messageQueue = [];
@@ -11,20 +13,7 @@ angular.module('streamrootTestApp')
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
-  $scope.$on('$destroy', function () {
-    socket.unsyncUpdates('chat');
-  });
-
   var room = 'plop';
-  //
-  // $scope.send = function() {
-  //   console.log('Client sending message: ', $scope.message);
-  //   // socket.syncUpdates('message', $scope.message);
-  //   $scope.message = '';
-  //
-  //
-  // };
-
 
   socket.socket.on('ipaddr', function (ipaddr) {
     console.log('Server IP address is: ' + ipaddr);
@@ -32,11 +21,14 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('created', function (room, clientId) {
+    $scope.clientId = clientId;
     console.log('Created room', room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
   socket.socket.on('joined', function (room, clientId) {
+    $scope.clientId = clientId;
+
     console.log('This peer has joined room', room, 'with client ID', clientId);
     isInitiator = false;
   });
@@ -49,12 +41,13 @@ angular.module('streamrootTestApp')
     console.log.apply(console, array);
   });
 
-  socket.socket.on('message', function (message){
+  socket.socket.on('message', function (message, clientId){
+
     $scope.messageQueue.push({
       content: message,
-      sender: 'remote'
-      });
-    console.log('Client received message:', message);
+      sender: clientId
+    });
+    console.log('Client ', clientId,  ' received message:', message);
     signalingMessageCallback(message);
   });
 
@@ -74,7 +67,7 @@ angular.module('streamrootTestApp')
 
     $scope.messageQueue.push({
       content: $scope.message,
-      sender: 'me'
+      sender: $scope.getCurrentUser()._id
     });
 
     $scope.message = '';
@@ -110,12 +103,12 @@ angular.module('streamrootTestApp')
     peerConn.onicecandidate = function (event) {
       console.log('onIceCandidate event:', event);
       if (event.candidate) {
-        sendMessage({
-          type: 'candidate',
-          label: event.candidate.sdpMLineIndex,
-          id: event.candidate.sdpMid,
-          candidate: event.candidate.candidate
-        });
+        //  sendMessage({
+        //   type: 'candidate',
+        //   label: event.candidate.sdpMLineIndex,
+        //   id: event.candidate.sdpMid,
+        //   candidate: event.candidate.candidate
+        // });
       } else {
         console.log('End of candidates.');
       }
@@ -141,7 +134,7 @@ angular.module('streamrootTestApp')
     console.log('local session created:', desc);
     peerConn.setLocalDescription(desc, function () {
       console.log('sending local desc:', peerConn.localDescription);
-      sendMessage(peerConn.localDescription);
+      $scope.sendMessage(peerConn.localDescription);
     }, logError);
   }
 
@@ -180,6 +173,10 @@ angular.module('streamrootTestApp')
         renderPhoto(buf);
       }
     }
+  }
+
+  function logError(err) {
+    console.log(err.toString(), err);
   }
 
   function receiveDataFirefoxFactory() {

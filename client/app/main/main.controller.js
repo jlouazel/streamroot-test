@@ -6,6 +6,10 @@ angular.module('streamrootTestApp')
 
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
+
+    _.remove($scope.users, {
+      _id: $scope.getCurrentUser()._id
+    });
   });
 
   $scope.connectedUsers = [];

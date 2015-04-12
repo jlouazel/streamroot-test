@@ -5,107 +5,43 @@
     <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: hidden; outline: none;">
       <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in messageQueue">
         <div class="chat-contact">
-          <img src="assets/images/no_photo.jpg" alt="">
+          <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
         </div>
         <div class="chat-text">
           <small>{{ ::message.sender.name }}</small><br/>{{ ::message.content }}
         </div>
       </div>
-      <!--      <div class="chat-message chat-primary">
-      <div class="chat-contact">
-      <img src="assets/images/no_photo.jpg" alt="">
     </div>
-    <div class="chat-text">
-    Well, that was almost like a visit to the local loony bin. Strangers starts talking to you, but you are unable to comprehend what they are trying to say, and then they suddenly get distracted and leaves.
+    <form ng-submit="sendMessage()">
+      <div class="input-group">
+        <input type="text" placeholder="Enter your message here" ng-model="message" class="form-control">
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
+        </span>
+      </div>
+    </form>
   </div>
-</div>
-<div class="chat-message chat-success">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-I found some really interesting people on omegle.
-</div>
-</div>
-<div class="chat-message chat-success">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-We talked about music, literature, life, etc.
-</div>
-</div>
-<div class="chat-message me">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-What about good old ICQ?
-</div>
-</div>
-<div class="chat-message me">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-It’s not a website.
-</div>
-</div>
-<div class="chat-message chat-success">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-I’m talking about icq.com, not the messenger.
-</div>
-</div>
-<div class="chat-message chat-success">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-Well, thank you for the pointer! I will eventually write a post about chatrooms and will definitely include ICQ.
-</div>
-</div>
-<div class="chat-message me">
-<div class="chat-contact">
-<img src="assets/images/no_photo.jpg" alt="">
-</div>
-<div class="chat-text">
-I’ve been using chatlack.com which is like chatroulette and iddin but with photos.
-</div>
-</div> -->
-</div>
-<form ng-submit="sendMessage()">
-  <div class="input-group">
-    <input type="text" placeholder="Enter your message here" ng-model="message" class="form-control">
-    <span class="input-group-btn">
-      <button type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
-    </span>
-  </div>
-</form>
-</div>
-<div class="col-md-4">
-  <div class="panel">
-    <div class="panel-body">
-      <ul class="chat-users m0">
-        <h4>Online<small> ({{ numConnectedUsers }})</small></h4>
-        <li data-stats="online" ng-repeat="user in users" ng-show="user.connected">
-          <a href="javascript:;">
-            <img src="assets/images/no_photo.jpg" alt="">
-            <span>{{ user.name }}</span>
-          </a>
-        </li>
-        <hr class="outsider">
-        <h4>All Contacts<small> ({{ users.length - numConnectedUsers }})</small></h4>
-        <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
-          <a href="javascript:;">
-            <img src="assets/images/no_photo.jpg" alt="">
-            <span>{{ user.name }}</span>
-          </a>
-        </li>
-      </ul>
+  <div class="col-md-4">
+    <div class="panel">
+      <div class="panel-body">
+        <ul class="chat-users m0">
+          <h4>Online<small> ({{ numConnectedUsers }})</small></h4>
+          <li data-stats="online" ng-repeat="user in users" ng-show="user.connected">
+            <a href="javascript:;">
+              <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
+              <span>{{ user.name }}</span>
+            </a>
+          </li>
+          <hr class="outsider">
+          <h4>All Contacts<small> ({{ users.length - numConnectedUsers }})</small></h4>
+          <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
+            <a href="javascript:;">
+              <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
+              <span>{{ user.name }}</span>
+            </a>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
-</div>
 </div>

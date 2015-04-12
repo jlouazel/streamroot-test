@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth, User) {
+.controller('MainCtrl', function ($scope, socket, Auth, User, _) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
   User.getAll().$promise.then(function(users) {

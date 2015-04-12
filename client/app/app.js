@@ -51,4 +51,5 @@ angular.module('streamrootTestApp', [
         }
       });
     });
-  });
+  })
+  .constant('_', _);

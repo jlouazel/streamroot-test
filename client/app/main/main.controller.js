@@ -102,7 +102,7 @@ angular.module('streamrootTestApp')
   $scope.sendMessage = function(message) {
     if (message) {
       socket.socket.emit('message', message);
-    } else {
+    } else if ($scope.message){
       console.log('Client sending message: ', $scope.message);
       socket.socket.emit('message', $scope.message, $scope.room);
 

@@ -40,8 +40,13 @@ angular.module('streamrootTestApp')
   $scope.room = 'plop';
 
 
-  socket.socket.on('live', function(clientId, userId) {
-    _.find($scope.users, {'_id': userId}).connected = true;
+  socket.socket.on('alive', function(clientId, userId) {
+    console.log('PLLLLLLLLLLOOOOOOOPPPPPPPPPPPPP');
+    var user = _.find($scope.users, {'_id': userId});
+    if (user) {
+      user.connected = true;
+      $scope.numConnectedUsers++;
+    }
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
@@ -61,8 +66,8 @@ angular.module('streamrootTestApp')
     isInitiator = false;
   });
 
-  socket.socket.on('quit', function(room, socketid) {
-    console.log('Client ', socketid, ' has quitted.');
+  socket.socket.on('quit', function(room, socketid, userId) {
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Client ', socketid, ' has quitted.');
   });
 
   socket.socket.on('ready', function () {

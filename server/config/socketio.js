@@ -49,13 +49,11 @@ module.exports = function (socketio) {
 
     socket.connectedAt = new Date();
 
-    socket.broadcast.emit('live', socket.id, socket.decoded_token._id);
+    socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 
     // Call onDisconnect.
     socket.on('disconnect', function () {
-      // numClients--;
-
-      // socket.emit('quit', room, socket.id);
+      socket.broadcast.emit('quitted', socket.id, socket.decoded_token._id);
       onDisconnect(socket);
       console.info('[%s] DISCONNECTED', socket.address);
     });

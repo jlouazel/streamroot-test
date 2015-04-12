@@ -77,22 +77,16 @@ module.exports = function (socketio) {
     socket.on('create or join', function (room) {
       log('Request to create or join room ' + room);
       var numClients = 0;
-      // var numClients = socketio.of('/').clients().length;
+
       var _room = socketio.of('/').adapter.rooms[room];
       if (_room) {
         for (var property in _room) {
           if(_room.hasOwnProperty(property))
-          {
             numClients++;
-          }
         }
       }
 
-      console.log(numClients);
-
-      // console.log(Object.keys(socketio.nsps['/'].adapter.rooms[room]).length);
       log('Room ' + room + ' has ' + numClients + ' client(s)');
-
       if (numClients === 0){
         console.log('>>>>> created');
         socket.join(room);
@@ -100,7 +94,7 @@ module.exports = function (socketio) {
       } else if (numClients <= 5) {
         console.log('>>>>> joined');
         socket.join(room);
-        socket.emit('joined', room, socket.id);
+        socket.broadcast.emit('joined', room, socket.id, socket.decoded_token);
         socketio.sockets.in(room).emit('ready');
 
       } else { // max two clients

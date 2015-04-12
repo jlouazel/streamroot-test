@@ -28,11 +28,11 @@ angular.module('streamrootTestApp')
     isInitiator = true;
   });
 
-  socket.socket.on('joined', function (room, clientId) {
-    // $scope.clientsPool.push(clientId);
+  socket.socket.on('joined', function (room, clientId, userId) {
+    $scope.clientsPool.push(clientId);
     // $scope.clientId = clientId;
 
-    console.log('This peer has joined room', room, 'with client ID', clientId);
+    console.log('This peer has joined room', room, 'with client ID', clientId, 'and user ID', userId);
     isInitiator = false;
   });
 
@@ -54,7 +54,11 @@ angular.module('streamrootTestApp')
     //   sender: clientId
     // });
     console.log('Client ', clientId,  ' received message:', message);
-    signalingMessageCallback(message, clientId);
+
+    if (!message.type)
+      $scope.messageQueue.push({content: message, sender: clientId});
+    else
+      signalingMessageCallback(message, clientId);
   });
 
   // Join a room
@@ -115,14 +119,12 @@ angular.module('streamrootTestApp')
     peerConn.onicecandidate = function (event) {
       console.log('onIceCandidate event:', event);
       if (event.candidate) {
-        $scope.internalMessage = {
+        $scope.sendMessage({
           type: 'candidate',
           label: event.candidate.sdpMLineIndex,
           id: event.candidate.sdpMid,
           candidate: event.candidate.candidate
-        };
-
-        $scope.sendMessage();
+        });
 
       } else {
         console.log('End of candidates.');

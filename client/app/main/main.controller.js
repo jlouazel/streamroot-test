@@ -47,8 +47,8 @@ angular.module('streamrootTestApp')
     }
   });
 
-  socket.socket.on('dead', function(room, socketid, userId) {
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Client ', socketid, ' has quitted.');
+  socket.socket.on('dead', function(socketid, userId) {
+    _.find($scope.users, {'_id': userId}).connected = false;
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {

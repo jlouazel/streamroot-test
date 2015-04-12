@@ -53,7 +53,7 @@ module.exports = function (socketio) {
 
     // Call onDisconnect.
     socket.on('disconnect', function () {
-      socket.broadcast.emit('dead', socket.id, socket.decoded_token._id);
+      socketio.emit('dead', socket.id, socket.decoded_token._id);
       onDisconnect(socket);
       console.info('[%s] DISCONNECTED', socket.address);
     });

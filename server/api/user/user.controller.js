@@ -4,15 +4,16 @@ var User = require('./user.model');
 var passport = require('passport');
 var config = require('../../config/environment');
 var jwt = require('jsonwebtoken');
+var io = require('./user.socket').getIO();
 
 var validationError = function(res, err) {
   return res.json(422, err);
 };
 
 /**
- * Get list of users
- * restriction: 'admin'
- */
+* Get list of users
+* restriction: 'admin'
+*/
 exports.index = function(req, res) {
   User.find({}, '-salt -hashedPassword', function (err, users) {
     if(err) return res.send(500, err);
@@ -21,8 +22,8 @@ exports.index = function(req, res) {
 };
 
 /**
- * Creates a new user
- */
+* Creates a new user
+*/
 exports.create = function (req, res, next) {
   var newUser = new User(req.body);
   newUser.provider = 'local';
@@ -35,8 +36,8 @@ exports.create = function (req, res, next) {
 };
 
 /**
- * Get a single user
- */
+* Get a single user
+*/
 exports.show = function (req, res, next) {
   var userId = req.params.id;
 
@@ -48,9 +49,9 @@ exports.show = function (req, res, next) {
 };
 
 /**
- * Deletes a user
- * restriction: 'admin'
- */
+* Deletes a user
+* restriction: 'admin'
+*/
 exports.destroy = function(req, res) {
   User.findByIdAndRemove(req.params.id, function(err, user) {
     if(err) return res.send(500, err);
@@ -59,8 +60,8 @@ exports.destroy = function(req, res) {
 };
 
 /**
- * Change a users password
- */
+* Change a users password
+*/
 exports.changePassword = function(req, res, next) {
   var userId = req.user._id;
   var oldPass = String(req.body.oldPassword);
@@ -80,22 +81,33 @@ exports.changePassword = function(req, res, next) {
 };
 
 /**
- * Get my info
- */
+* Get my info
+*/
 exports.me = function(req, res, next) {
   var userId = req.user._id;
   User.findOne({
     _id: userId
   }, '-salt -hashedPassword', function(err, user) { // don't ever give out the password or salt
-    if (err) return next(err);
-    if (!user) return res.json(401);
-    res.json(user);
-  });
+  if (err) return next(err);
+  if (!user) return res.json(401);
+  res.json(user);
+});
 };
 
+exports.connected = function(req, res) {
+  var connectedSockets = io.sockets.sockets,
+  peers = [];
+
+  for (var i = 0, len = connectedSockets.length; i < len; i++) {
+    peers.push(connectedSockets[i].decoded_token._id)
+  }
+  res.send(200, peers);
+};
+
+
 /**
- * Authentication callback
- */
+* Authentication callback
+*/
 exports.authCallback = function(req, res, next) {
   res.redirect('/');
 };

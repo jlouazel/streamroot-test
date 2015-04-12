@@ -3,6 +3,7 @@
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _) {
   $scope.getCurrentUser = Auth.getCurrentUser;
+  $scope.connectedUsers = 0;
 
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
@@ -12,7 +13,6 @@ angular.module('streamrootTestApp')
     });
   });
 
-  $scope.connectedUsers = [];
   $scope.clientId = null;
 
   $scope.message = '';
@@ -28,7 +28,7 @@ angular.module('streamrootTestApp')
 
 
   socket.socket.on('live', function(clientId, userId) {
-
+    console.log(User.get(userId))
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {

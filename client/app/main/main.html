@@ -89,14 +89,14 @@ I’ve been using chatlack.com which is like chatroulette and iddin but with pho
   <div class="panel">
     <div class="panel-body">
       <ul class="chat-users m0">
-        <h4>Online<small> ({{ connectedUsers.length }})</small></h4>
-        <li data-stats="online" ng-repeat="user in connectedUsers">
+        <h4>Online<small> ({{ connectedUsers }})</small></h4>
+        <li data-stats="online" ng-repeat="user in connectedUsers" ng-show="user.connected">
           <img src="assets/images/no_photo.jpg" alt="">
           <span>{{ user.name }}</span>
         </li>
         <hr class="outsider">
-        <h4>All Contacts<small> ({{ users.length }})</small></h4>
-        <li data-stats="offline" ng-repeat="user in users">
+        <h4>All Contacts<small> ({{ users.length - connectedUsers }})</small></h4>
+        <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
           <img src="assets/images/no_photo.jpg" alt="">
           <span>{{ user.name }}</span>
         </li>

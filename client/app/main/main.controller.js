@@ -9,6 +9,8 @@ angular.module('streamrootTestApp')
   $scope.message = '';
   $scope.messageQueue = [];
 
+  $scope.clientsPool = [];
+
   var isInitiator = false;
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
@@ -27,10 +29,15 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('joined', function (room, clientId) {
-    $scope.clientId = clientId;
+    // $scope.clientsPool.push(clientId);
+    // $scope.clientId = clientId;
 
     console.log('This peer has joined room', room, 'with client ID', clientId);
     isInitiator = false;
+  });
+
+  socket.socket.on('quit', function(room, socketid) {
+    console.log('Client ', socketid, ' has quitted.');
   });
 
   socket.socket.on('ready', function () {
@@ -42,13 +49,12 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('message', function (message, clientId){
-
-    $scope.messageQueue.push({
-      content: message,
-      sender: clientId
-    });
+    // $scope.messageQueue.push({
+    //   content: message,
+    //   sender: clientId
+    // });
     console.log('Client ', clientId,  ' received message:', message);
-    signalingMessageCallback(message);
+    signalingMessageCallback(message, clientId);
   });
 
   // Join a room
@@ -61,23 +67,28 @@ angular.module('streamrootTestApp')
   /**
   * Send message to signaling server
   */
-  $scope.sendMessage = function(){
-    console.log('Client sending message: ', $scope.message);
-    socket.socket.emit('message', $scope.message);
+  $scope.sendMessage = function(message) {
+    if (message) {
+      socket.socket.emit('message', message);
+    } else {
+      console.log('Client sending message: ', $scope.message);
+      socket.socket.emit('message', $scope.message);
 
-    $scope.messageQueue.push({
-      content: $scope.message,
-      sender: $scope.getCurrentUser()._id
-    });
+      $scope.messageQueue.push({
+        content: $scope.message,
+        sender: $scope.getCurrentUser()._id
+      });
 
-    $scope.message = '';
+      $scope.message = '';
+
+    }
   }
 
 
   var peerConn;
   var dataChannel;
 
-  function signalingMessageCallback(message) {
+  function signalingMessageCallback(message, clientId) {
     if (message.type === 'offer') {
       console.log('Got offer. Sending answer to peer.');
       peerConn.setRemoteDescription(new RTCSessionDescription(message), function(){}, logError);
@@ -89,6 +100,7 @@ angular.module('streamrootTestApp')
 
     } else if (message.type === 'candidate') {
       peerConn.addIceCandidate(new RTCIceCandidate({candidate: message.candidate}));
+      // $scope.clientPool.push(clientId);
 
     } else if (message === 'bye') {
       // TODO: cleanup RTC connection?
@@ -103,12 +115,15 @@ angular.module('streamrootTestApp')
     peerConn.onicecandidate = function (event) {
       console.log('onIceCandidate event:', event);
       if (event.candidate) {
-        //  sendMessage({
-        //   type: 'candidate',
-        //   label: event.candidate.sdpMLineIndex,
-        //   id: event.candidate.sdpMid,
-        //   candidate: event.candidate.candidate
-        // });
+        $scope.internalMessage = {
+          type: 'candidate',
+          label: event.candidate.sdpMLineIndex,
+          id: event.candidate.sdpMid,
+          candidate: event.candidate.candidate
+        };
+
+        $scope.sendMessage();
+
       } else {
         console.log('End of candidates.');
       }

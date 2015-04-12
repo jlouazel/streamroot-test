@@ -13,6 +13,12 @@ User.find({}).remove(function() {
     name: 'Jean-Baptiste Louazel',
     email: 'jb.louazel@gmail.com',
     password: 'admin'
+  },
+  {
+    provider: 'local',
+    name: 'Julien Polge',
+    email: 'julien.polge@gmail.com',
+    password: 'test'
   }, function() {
       console.log('finished populating users');
     }

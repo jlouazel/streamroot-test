@@ -25,7 +25,6 @@ angular.module('streamrootTestApp')
     });
   });
 
-
   $scope.clientId = null;
 
   $scope.message = '';
@@ -41,12 +40,15 @@ angular.module('streamrootTestApp')
 
 
   socket.socket.on('alive', function(clientId, userId) {
-    console.log('PLLLLLLLLLLOOOOOOOPPPPPPPPPPPPP');
     var user = _.find($scope.users, {'_id': userId});
     if (user) {
       user.connected = true;
       $scope.numConnectedUsers++;
     }
+  });
+
+  socket.socket.on('dead', function(room, socketid, userId) {
+    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Client ', socketid, ' has quitted.');
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
@@ -66,9 +68,7 @@ angular.module('streamrootTestApp')
     isInitiator = false;
   });
 
-  socket.socket.on('quit', function(room, socketid, userId) {
-    console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>Client ', socketid, ' has quitted.');
-  });
+
 
   socket.socket.on('ready', function () {
     createPeerConnection(isInitiator, configuration);
@@ -82,7 +82,8 @@ angular.module('streamrootTestApp')
     console.log('Client ', clientId,  ' received message:', message);
 
     if (!message.type && clientId != $scope.clientId) {
-      $scope.messageQueue.push({content: message, sender: clientId});
+      var user = _.find($scope.users, {'_id': userId});
+      $scope.messageQueue.push({content: message, sender: user});
     }
     else
     signalingMessageCallback(message, clientId);
@@ -107,7 +108,7 @@ angular.module('streamrootTestApp')
 
       $scope.messageQueue.push({
         content: $scope.message,
-        sender: $scope.getCurrentUser()._id
+        sender: $scope.getCurrentUser()
       });
 
       $scope.message = '';

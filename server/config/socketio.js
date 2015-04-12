@@ -53,7 +53,7 @@ module.exports = function (socketio) {
 
     // Call onDisconnect.
     socket.on('disconnect', function () {
-      socket.broadcast.emit('quitted', socket.id, socket.decoded_token._id);
+      socket.broadcast.emit('dead', socket.id, socket.decoded_token._id);
       onDisconnect(socket);
       console.info('[%s] DISCONNECTED', socket.address);
     });
@@ -101,7 +101,7 @@ module.exports = function (socketio) {
         socket.emit('joined', room, socket.id);
         socketio.sockets.in(room).emit('ready');
 
-      } else { // max two clients
+      } else {
         console.log('>>>>> full');
         socket.emit('full', room);
       }

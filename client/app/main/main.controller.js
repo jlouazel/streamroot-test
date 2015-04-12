@@ -4,6 +4,11 @@ angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
+  User.getAll().$promise.then(function(users) {
+    $scope.users = users;
+  });
+
+  $scope.connectedUsers = [];
   $scope.clientId = null;
 
   $scope.message = '';
@@ -16,6 +21,11 @@ angular.module('streamrootTestApp')
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
   $scope.room = 'plop';
+
+
+  socket.socket.on('live', function(clientId, userId) {
+
+  });
 
   socket.socket.on('ipaddr', function (ipaddr) {
     console.log('Server IP address is: ' + ipaddr);

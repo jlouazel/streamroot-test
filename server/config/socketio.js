@@ -47,6 +47,8 @@ module.exports = function (socketio) {
 
     socket.connectedAt = new Date();
 
+    socket.broadcast.emit('live', socket.id, socket.decoded_token._id);
+
     // Call onDisconnect.
     socket.on('disconnect', function () {
       // numClients--;

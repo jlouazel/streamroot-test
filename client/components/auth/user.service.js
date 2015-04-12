@@ -17,6 +17,10 @@ angular.module('streamrootTestApp')
         params: {
           id:'me'
         }
+      },
+      getAll: {
+        method: 'GET',
+        isArray: true
       }
 	  });
   });

@@ -3,13 +3,12 @@
 <div class="col-md-12">
   <div class="col-md-8">
     <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: hidden; outline: none;">
-
-      <div class="chat-message me" ng-repeat="message in messageQueue">
+      <div class="chat-message" ng-class="{'me': message.sender === 'me'}" ng-repeat="message in messageQueue">
         <div class="chat-contact">
           <img src="assets/images/no_photo.jpg" alt="">
         </div>
         <div class="chat-text">
-          {{ message.text }}
+          {{ message.content }}
         </div>
       </div>
       <!--      <div class="chat-message chat-primary">

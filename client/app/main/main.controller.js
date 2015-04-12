@@ -16,12 +16,14 @@ angular.module('streamrootTestApp')
   });
 
   var room = 'plop';
-
-  $scope.send = function() {
-    console.log('Client sending message: ', $scope.message);
-    // socket.syncUpdates('message', $scope.message);
-    $scope.message = '';
-  };
+  //
+  // $scope.send = function() {
+  //   console.log('Client sending message: ', $scope.message);
+  //   // socket.syncUpdates('message', $scope.message);
+  //   $scope.message = '';
+  //
+  //
+  // };
 
 
   socket.socket.on('ipaddr', function (ipaddr) {
@@ -48,7 +50,10 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('message', function (message){
-    $scope.messageQueue.push({text: message});
+    $scope.messageQueue.push({
+      content: message,
+      sender: 'remote'
+      });
     console.log('Client received message:', message);
     signalingMessageCallback(message);
   });
@@ -66,6 +71,12 @@ angular.module('streamrootTestApp')
   $scope.sendMessage = function(){
     console.log('Client sending message: ', $scope.message);
     socket.socket.emit('message', $scope.message);
+
+    $scope.messageQueue.push({
+      content: $scope.message,
+      sender: 'me'
+    });
+
     $scope.message = '';
   }
 

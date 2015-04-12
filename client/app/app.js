@@ -30,8 +30,8 @@ angular.module('streamrootTestApp', [
     embeddedVideosHeight: undefined,  // if given will be used to set height of embedded videos
     embeddedVideosWidth: undefined,  // if given will be used to set width of embedded videos
     embedYoutube: true,  // replaces links to youtube videos with iframed youtube videos
-    embeddedYoutubeHeight: '400px',  // height of youtube video
-    embeddedYoutubeWidth: '50%',  // width of youtube video
+    embeddedYoutubeHeight: undefined,  // height of youtube video
+    embeddedYoutubeWidth: undefined,  // width of youtube video
   });
 })
 .factory('authInterceptor', function ($rootScope, $q, $cookieStore, $location) {

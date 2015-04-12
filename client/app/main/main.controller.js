@@ -84,6 +84,9 @@ angular.module('streamrootTestApp')
     if (!message.type && clientId != $scope.clientId) {
       var user = _.find($scope.users, {'_id': userId});
       $scope.messageQueue.push({content: message, sender: user});
+      $timeout(function() {
+        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+      }, 100);
     }
     else
     signalingMessageCallback(message, clientId);

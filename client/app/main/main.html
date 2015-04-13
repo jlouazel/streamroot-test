@@ -14,17 +14,7 @@ color: #FFFFFF;
 <div class="col-md-12">
   <div class="col-md-8">
     <ul class="nav nav-tabs"><li class="dropdown pull-right tabdrop hide"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a><ul class="dropdown-menu"></ul></li>
-    <li class="active"><a href="#home1" data-toggle="tab" aria-expanded="true">Home</a></li>
-    <li class=""><a href="#profile1" data-toggle="tab" aria-expanded="false">Profile</a></li>
-    <li class="dropdown">
-      <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">Dropdown<span class="caret"></span></a>
-      <ul class="dropdown-menu">
-        <li><a href="#">Something</a></li>
-        <li><a href="#">Something Else</a></li>
-        <li class="divider"></li>
-        <li><a href="#">And one more thing</a></li>
-      </ul>
-    </li>
+    <li class="active"><a data-toggle="tab" aria-expanded="true">{{ room }}</a></li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
     <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in messageQueue">

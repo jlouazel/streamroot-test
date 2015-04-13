@@ -6,6 +6,7 @@
 
 var config = require('./environment'),
 os = require('os'),
+_ = require('lodash'),
 numClients = 0;
 
 // When the user disconnects.. perform this
@@ -69,12 +70,24 @@ module.exports = function (socketio) {
       // socket.emit('log', array);
     }
 
+    socket.on('speak', function(userid, room) {
+      var sockets = socketio.sockets.sockets;
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === userid) {
+          sockets[i].join(room.id);
+          sockets[i].emit('speaked', room);
+        }
+      }
+    });
+
     socket.on('message', function (message, room) {
       log('Client said:', message);
       console.log(message);
-      // for a real app, would be room only (not broadcast)
+
       socketio.sockets.in(room).emit('message', message,  socket.id, socket.decoded_token._id);
     });
+
+
 
     socket.on('create or join', function (room) {
       log('Request to create or join room ' + room);

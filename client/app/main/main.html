@@ -14,10 +14,12 @@ color: #FFFFFF;
 <div class="col-md-12">
   <div class="col-md-8">
     <ul class="nav nav-tabs"><li class="dropdown pull-right tabdrop hide"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a><ul class="dropdown-menu"></ul></li>
-    <li class="active"><a data-toggle="tab" aria-expanded="true">{{ room }}</a></li>
+    <li class="active" ng-repeat="room in rooms">
+      <a data-toggle="tab" aria-expanded="true">{{ room | roomName }}</a>
+      </li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
-    <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in messageQueue">
+    <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">
       <div class="chat-contact">
         <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
       </div>
@@ -31,9 +33,9 @@ color: #FFFFFF;
   </div>
   <form ng-submit="sendMessage()">
     <div class="input-group">
-      <input type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
+      <input ng-disabled="currentRoomIndex === -1" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
       <span class="input-group-btn">
-        <button type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
+        <button ng-disabled="currentRoomIndex === -1" type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
       </span>
     </div>
   </form>
@@ -42,8 +44,8 @@ color: #FFFFFF;
   <div class="panel">
     <div class="panel-body">
       <ul class="chat-users m0">
-        <h4>Online<small> ({{ numConnectedUsers }})</small></h4>
-        <li data-stats="online" ng-repeat="user in users" ng-show="user.connected">
+        <h4>Online<small>({{ numConnectedUsers }})</small></h4>
+        <li data-stats="online" ng-repeat="user in users" ng-show="user.connected" ng-click="initRoom(user)">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
             <span>{{ user.name }}</span>

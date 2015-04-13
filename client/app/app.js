@@ -24,7 +24,7 @@ angular.module('streamrootTestApp', [
     embedLinks: true,  // replaces links with Html links
     embeddedLinkTarget: '_blank',  // sets the target of all replaced links
     embedImages: true,  // replaces links to images with Html images
-    embeddedImagesHeight: undefined,  // if given will be used to set height of embedded images
+    embeddedImagesHeight: 300,  // if given will be used to set height of embedded images
     embeddedImagesWidth: undefined,  // if given will be used to set width of embedded images
     embedVideos: true,  // replaces links to videos with Html videos
     embeddedVideosHeight: undefined,  // if given will be used to set height of embedded videos

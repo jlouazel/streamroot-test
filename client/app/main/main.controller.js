@@ -14,6 +14,9 @@ angular.module('streamrootTestApp')
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
+  $scope.rooms = [];
+  $scope.currentRoomIndex = -1;
+
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
 
@@ -22,7 +25,7 @@ angular.module('streamrootTestApp')
     });
 
     User.getConnected().$promise.then(function(connectedUsers) {
-
+      console.log(connectedUsers);
       angular.forEach(connectedUsers, function(user) {
         var found = _.find($scope.users, {'_id': user});
 
@@ -33,6 +36,21 @@ angular.module('streamrootTestApp')
       });
     });
   });
+
+  function initRoom(user) {
+    var room = {
+      id: makeid(),
+      users: [user],
+      messages: []
+    };
+    $scope.rooms.push(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+
+    socket.socket.emit('create or join', room);
+    socket.socket.emit('speak', user._id, room);
+  }
+
+
 
   $scope.clientId = null;
 
@@ -45,8 +63,6 @@ angular.module('streamrootTestApp')
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
 
-  $scope.room = makeid();
-
 
   socket.socket.on('alive', function(clientId, userId) {
     var user = _.find($scope.users, {'_id': userId});
@@ -56,19 +72,26 @@ angular.module('streamrootTestApp')
     }
   });
 
+  socket.socket.on('speaked', function(room) {
+    console.log(room);
+    room.messages = [];
+    $scope.rooms.push(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+  });
+
   socket.socket.on('dead', function(socketid, userId) {
     $scope.numConnectedUsers--;
     _.find($scope.users, {'_id': userId}).connected = false;
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
-    console.log('Server IP address is: ' + ipaddr);
+    // console.log('Server IP address is: ' + ipaddr);
     // updateRoomURL(ipaddr);
   });
 
   socket.socket.on('created', function (room, clientId) {
     $scope.clientId = clientId;
-    console.log('Created room', $scope.room, '- my client ID is', clientId);
+    // console.log('Created room', $scope.room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
@@ -93,7 +116,8 @@ angular.module('streamrootTestApp')
 
     if (!message.type && clientId != $scope.clientId) {
       var user = _.find($scope.users, {'_id': userId});
-      $scope.messageQueue.push({content: message, sender: user});
+
+      $scope.rooms[$scope.currentRoomIndex].messages.push({content: message, sender: user});
       $timeout(function() {
         document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
       }, 100);
@@ -109,6 +133,18 @@ angular.module('streamrootTestApp')
     socket.socket.emit('ipaddr');
   }
 
+  $scope.initRoom = function(user) {
+    var room = {
+      id: makeid(),
+      users: [user],
+      messages: []
+    };
+    $scope.rooms.push(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+
+    socket.socket.emit('create or join', room);
+  }
+
   /**
   * Send message to signaling server
   */
@@ -116,14 +152,16 @@ angular.module('streamrootTestApp')
     if (message) {
       socket.socket.emit('message', message);
     } else if ($scope.message) {
-      console.log('Client sending message: ', $scope.message);
-      socket.socket.emit('message', $scope.message, $scope.room);
-
-      $scope.messageQueue.push({
+      $scope.rooms[$scope.currentRoomIndex].messages.push({
         content: $scope.message,
         sender: $scope.getCurrentUser()
       });
 
+      if ($scope.rooms[$scope.currentRoomIndex].messages.length === 1) {
+        socket.socket.emit('speak', $scope.rooms[$scope.currentRoomIndex].users[0]._id, $scope.rooms[$scope.currentRoomIndex]);
+      }
+
+      socket.socket.emit('message', $scope.message, $scope.room);
 
       $timeout(function() {
         document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
@@ -278,4 +316,9 @@ angular.module('streamrootTestApp')
   }
 
 
+}).filter('roomName', function() {
+  return function(input) {
+    console.log(input);
+    return input ? '\u2713' : '\u2718';
+  };
 });

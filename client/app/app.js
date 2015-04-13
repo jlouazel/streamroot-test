@@ -30,8 +30,21 @@ angular.module('streamrootTestApp', [
     embeddedVideosHeight: undefined,  // if given will be used to set height of embedded videos
     embeddedVideosWidth: undefined,  // if given will be used to set width of embedded videos
     embedYoutube: true,  // replaces links to youtube videos with iframed youtube videos
-    embeddedYoutubeHeight: undefined,  // height of youtube video
-    embeddedYoutubeWidth: undefined,  // width of youtube video
+    embeddedYoutubeHeight: 315,
+    embeddedYoutubeWidth: 560,
+    smilies: {
+      ';)': 'assets/images/emoticons/Wink2.png',  // cc-by-sa, Karsten Janke, oberth-media.de
+      ':D': 'assets/images/emoticons/Happy2.png',
+      ':)': 'assets/images/emoticons/Smiley2.png',
+      ':S': 'assets/images/emoticons/Confused2.png',
+      ':(': 'assets/images/emoticons/Sad2.png',
+      ':P': 'assets/images/emoticons/Tongue2.png',
+      ':p': 'assets/images/emoticons/Tongue2.png',
+      ':O': 'assets/images/emoticons/Shocked2.png',
+      ':|': 'assets/images/emoticons/Neutral2.png',
+      ':o': 'assets/images/emoticons/Shocked2.png',
+      '3:)': 'assets/images/emoticons/Evil2.png'
+  }
   });
 })
 .factory('authInterceptor', function ($rootScope, $q, $cookieStore, $location) {

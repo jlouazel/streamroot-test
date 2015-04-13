@@ -1,5 +1,13 @@
 'use strict';
 
+String.prototype.trunc =
+function(n,useWordBoundary){
+  var toLong = this.length>n,
+  s_ = toLong ? this.substr(0,n-1) : this;
+  s_ = useWordBoundary && toLong ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
+  return  toLong ? s_ + '&hellip;' : s_;
+};
+
 function makeid() {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -25,7 +33,6 @@ angular.module('streamrootTestApp')
     });
 
     User.getConnected().$promise.then(function(connectedUsers) {
-      console.log(connectedUsers);
       angular.forEach(connectedUsers, function(user) {
         var found = _.find($scope.users, {'_id': user});
 
@@ -36,21 +43,6 @@ angular.module('streamrootTestApp')
       });
     });
   });
-
-  function initRoom(user) {
-    var room = {
-      id: makeid(),
-      users: [user],
-      messages: []
-    };
-    $scope.rooms.push(room);
-    $scope.currentRoomIndex = $scope.rooms.length - 1;
-
-    socket.socket.emit('create or join', room);
-    socket.socket.emit('speak', user._id, room);
-  }
-
-
 
   $scope.clientId = null;
 
@@ -73,10 +65,11 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('speaked', function(room) {
-    console.log(room);
     room.messages = [];
+    updateRoomName(room);
     $scope.rooms.push(room);
     $scope.currentRoomIndex = $scope.rooms.length - 1;
+    numConnectedUsers++;
   });
 
   socket.socket.on('dead', function(socketid, userId) {
@@ -133,17 +126,61 @@ angular.module('streamrootTestApp')
     socket.socket.emit('ipaddr');
   }
 
+  function updateRoomName(room) {
+    room.name = '';
+    for (var i = 0, len = room.users.length; i < len; i++) {
+      if (room.users[i]._id !== $scope.getCurrentUser()._id) {
+        room.name += room.users[i].name;
+      }
+    }
+    if (room.name.length > 37) {
+      room.name.trunc(37);
+      room.name += '...'
+    }
+  }
+
+  function getRoomIndex(room) {
+    console.log();
+    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+      if ($scope.rooms[i].users.length === room.users.length) {
+        var onlyInA = $scope.rooms[i].users.filter(function(current){
+          return room.users.filter(function(current_b){
+            return current_b._id == current._id
+          }).length == 0
+        });
+
+        var onlyInB = room.users.filter(function(current){
+          return $scope.rooms[i].users.filter(function(current_a){
+            return current_a._id == current._id
+          }).length == 0
+        });
+
+        if (!onlyInA.concat(onlyInB).length) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+
   $scope.initRoom = function(user) {
     var room = {
       id: makeid(),
-      users: [user],
+      users: [user, $scope.getCurrentUser()],
       messages: []
     };
-    $scope.rooms.push(room);
-    $scope.currentRoomIndex = $scope.rooms.length - 1;
 
-    socket.socket.emit('create or join', room);
-  }
+    var index = getRoomIndex(room);
+    if (index === -1) {
+      updateRoomName(room);
+      $scope.rooms.push(room);
+      $scope.currentRoomIndex = $scope.rooms.length - 1;
+      socket.socket.emit('create or join', room);
+    } else {
+      $scope.currentRoomIndex = index;
+    }
+  };
 
   /**
   * Send message to signaling server
@@ -158,7 +195,7 @@ angular.module('streamrootTestApp')
       });
 
       if ($scope.rooms[$scope.currentRoomIndex].messages.length === 1) {
-        socket.socket.emit('speak', $scope.rooms[$scope.currentRoomIndex].users[0]._id, $scope.rooms[$scope.currentRoomIndex]);
+        socket.socket.emit('speak',  $scope.rooms[$scope.currentRoomIndex].users[0]._id, $scope.rooms[$scope.currentRoomIndex]);
       }
 
       socket.socket.emit('message', $scope.message, $scope.room);
@@ -316,9 +353,4 @@ angular.module('streamrootTestApp')
   }
 
 
-}).filter('roomName', function() {
-  return function(input) {
-    console.log(input);
-    return input ? '\u2713' : '\u2718';
-  };
 });

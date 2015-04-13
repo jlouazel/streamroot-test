@@ -97,7 +97,7 @@ module.exports = function (socketio) {
       if (_room) {
         for (var property in _room) {
           if(_room.hasOwnProperty(property))
-            numClients++;
+          numClients++;
         }
       }
 

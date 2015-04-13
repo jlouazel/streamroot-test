@@ -13,10 +13,13 @@ color: #FFFFFF;
 
 <div class="col-md-12">
   <div class="col-md-8">
-    <ul class="nav nav-tabs"><li class="dropdown pull-right tabdrop hide"><a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a><ul class="dropdown-menu"></ul></li>
+    <ul class="nav nav-tabs"><li class="dropdown pull-right tabdrop hide">
+      <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a>
+      <ul class="dropdown-menu"></ul>
+    </li>
     <li class="active" ng-repeat="room in rooms">
-      <a data-toggle="tab" aria-expanded="true">{{ room | roomName }}</a>
-      </li>
+      <a data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
+    </li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
     <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">

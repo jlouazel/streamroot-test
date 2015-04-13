@@ -17,7 +17,7 @@ color: #FFFFFF;
       <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a>
       <ul class="dropdown-menu"></ul>
     </li>
-    <li class="active" ng-repeat="room in rooms">
+    <li ng-class="{'active': $index === currentRoomIndex}" ng-repeat="room in rooms" ng-click="select($index)">
       <a data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
     </li>
   </ul>

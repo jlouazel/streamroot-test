@@ -352,5 +352,8 @@ angular.module('streamrootTestApp')
     }
   }
 
+  $scope.select = function(index) {
+    $scope.currentRoomIndex = index;
+  };
 
 });

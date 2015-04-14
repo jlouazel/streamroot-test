@@ -97,27 +97,26 @@ module.exports = function (socketio) {
 
 
 
-    socket.on('create or join', function (room) {
-      log('Request to create or join room ' + room);
+    socket.on('init', function (room) {
+      console.log('INIT');
+      // var numClients = socketio.sockets.in(room.id).length || 0;
 
-      var numClients = socketio.sockets.in(room.id).length || 0;
-
-      log('Room ' + room + ' has ' + numClients + ' client(s)');
-      if (numClients === 0){
-        console.log('>>>>> created');
-        socket.join(room.id);
-        socket.emit('created', room, socket.id);
-      } else if (numClients <= 5) {
-        console.log('>>>>> joined');
-        socket.join(room.id);
-        socket.emit('joined', room, socket.id);
-        socketio.sockets.in(room.id).emit('ready');
-
-      } else {
-        console.log('>>>>> full');
-        socket.emit('full', room.id);
-      }
-      numClients++;
+      // log('Room ' + room + ' has ' + numClients + ' client(s)');
+      // if (numClients === 0){
+      // console.log('>>>>> created');
+      socket.join(room.id);
+      socket.emit('created', room, socket.id);
+      // } else if (numClients <= 5) {
+      //   console.log('>>>>> joined');
+      //   socket.join(room.id);
+      //   socket.emit('joined', room, socket.id);
+      //   socketio.sockets.in(room.id).emit('ready');
+      //
+      // } else {
+      //   console.log('>>>>> full');
+      //   socket.emit('full', room.id);
+      // }
+      // numClients++;
     });
 
     socket.on('ban', function(user, room) {

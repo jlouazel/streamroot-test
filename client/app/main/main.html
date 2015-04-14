@@ -1,11 +1,8 @@
 <style>
 .chat-primary a {
   color: #FFFFFF;
+  text-decoration: underline;
 }
-
-/*.chat-primary a {
-color: #FFFFFF;
-}*/
 
 </style>
 <div ng-include="'components/navbar/navbar.html'"></div>
@@ -56,7 +53,8 @@ color: #FFFFFF;
     <div class="panel-body">
       <ul class="chat-users m0">
         <h4>Online<small>({{ numConnectedUsers }})</small></h4>
-        <li data-stats="online" ng-repeat="user in users" ng-show="user.connected" ng-click="initRoom(user)">
+        <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
+        <li data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
             <span>{{ user.name }}</span>

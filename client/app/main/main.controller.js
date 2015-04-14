@@ -25,6 +25,8 @@ angular.module('streamrootTestApp')
   $scope.rooms = [];
   $scope.currentRoomIndex = -1;
 
+  $scope.query = '';
+
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
 

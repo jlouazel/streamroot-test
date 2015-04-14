@@ -48,6 +48,8 @@ angular.module('streamrootTestApp')
 
   $scope.clientId = null;
 
+  $scope.inAddition = false;
+
   $scope.message = '';
   $scope.messageQueue = [];
 
@@ -133,26 +135,50 @@ angular.module('streamrootTestApp')
   // Join a room
   // socket.socket.emit('create or join', $scope.room);
 
-  $scope.initRoom = function(user) {
-    var room = {
-      id: makeid(),
-      users: [user, $scope.getCurrentUser()],
-      messages: []
-    };
+  function isInRoom(room, userId) {
+    return !!_.find(room.users, {'_id': userId});
+  }
 
-    var index = getRoomIndex(room);
-    //
-    if (index === -1) {
-      updateRoomName(room);
-      // $scope.rooms.push(room);
-      $scope.currentRoomIndex = $scope.rooms.length - 1;
-      socket.socket.emit('create or join', room);
-      socket.socket.emit('add', room, user._id);
+  $scope.initRoom = function(user) {
+
+    if (!$scope.inAddition) {
+      var room = {
+        id: makeid(),
+        users: [user, $scope.getCurrentUser()],
+        messages: []
+      };
+
+      var index = getRoomIndex(room);
+
+      //
+      if (index === -1) {
+        updateRoomName(room);
+        $scope.currentRoomIndex = $scope.rooms.length - 1;
+        socket.socket.emit('create or join', room);
+        socket.socket.emit('add', room, user._id);
+      } else {
+        $scope.currentRoomIndex = index;
+      }
     } else {
-      $scope.currentRoomIndex = index;
+      var currentRoom = $scope.rooms[$scope.currentRoomIndex];
+      if (!isInRoom(currentRoom, user._id)) {
+        currentRoom.users.push(user);
+        updateRoomName(currentRoom);
+        socket.socket.emit('add', currentRoom, user._id);
+        $scope.inAddition = false;
+      }
     }
   };
 
+  $scope.additionActivation = function() {
+    var currentRoom = $scope.rooms[$scope.currentRoomIndex];
+
+    if (currentRoom.users.length < 5) {
+      $scope.inAddition = !$scope.inAddition;
+    } else {
+      // TODO: Print that the room is full
+    }
+  };
   /**
   * Send message to signaling server
   */

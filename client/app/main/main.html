@@ -42,6 +42,10 @@
     <div class="input-group">
       <input ng-disabled="currentRoomIndex === -1" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
       <span class="input-group-btn">
+        <span ng-disabled="currentRoomIndex === -1" class="btn btn-default btn-file fa fa-upload">
+          <input type="file">
+        </span>
+        <!-- <input ng-disabled="currentRoomIndex === -1" type="file" ng-class="{'btn-inverse': inAddition, 'btn-default': !inAddtion }" class="btn"><i class="fa fa-upload"></i></input> -->
         <button ng-disabled="currentRoomIndex === -1" type="button" ng-click="additionActivation()" ng-class="{'btn-inverse': inAddition, 'btn-default': !inAddtion }" class="btn"><i class="fa fa-plus"></i></button>
         <button ng-disabled="currentRoomIndex === -1" type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
       </span>

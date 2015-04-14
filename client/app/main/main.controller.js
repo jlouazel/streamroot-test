@@ -135,6 +135,22 @@ angular.module('streamrootTestApp')
     // console.log.apply(console, array);
   });
 
+
+  socket.socket.on('fileTransfer', function (metadata, receiver) {
+    console.log('incoming filetransfer', metadata.name, metadata);
+    receiver.on('progress', function (bytesReceived) {
+        console.log('receive progress', bytesReceived, 'out of', metadata.size);
+    });
+    // get notified when file is done
+    receiver.on('receivedFile', function (file, metadata) {
+        console.log('received file', metadata.name, metadata.size);
+
+        // close the channel
+        receiver.channel.close();
+    });
+    filelist.appendChild(item);
+});
+
   socket.socket.on('message', function (message, clientId, userId, room) {
     if (!message.type && clientId != $scope.clientId) {
       var user = _.find($scope.users, {'_id': userId});

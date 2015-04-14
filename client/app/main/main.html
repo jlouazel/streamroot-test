@@ -1,51 +1,75 @@
+<style>
+.chat-primary a {
+  color: #FFFFFF;
+  text-decoration: underline;
+}
+
+</style>
 <div ng-include="'components/navbar/navbar.html'"></div>
 
 
 <div class="col-md-12">
   <div class="col-md-8">
-    <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
-      <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in messageQueue">
-        <div class="chat-contact">
-          <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
-        </div>
-        <div class="chat-text">
-          <small ng-if="message.sender._id !== getCurrentUser()._id" style="font-size: 0.8em;">{{ ::message.sender.name }}</small>
-          <small ng-if="message.sender._id === getCurrentUser()._id" style="font-size: 0.8em;">You</small>
-          <br/>
-          <div ng-bind-html="message.content | enhanceText"></div>
-        </div>
+    <ul class="nav nav-tabs"><li class="dropdown pull-right tabdrop hide">
+      <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a>
+      <ul class="dropdown-menu"></ul>
+    </li>
+    <li ng-class="{'active': $index === currentRoomIndex}" ng-repeat="room in rooms" ng-click="select($index)">
+      <a data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
+    </li>
+  </ul>
+  <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
+    <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">
+      <div class="chat-contact">
+        <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
       </div>
-    </div>
-    <form ng-submit="sendMessage()">
-      <div class="input-group">
-        <input type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
-        <span class="input-group-btn">
-          <button type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
-        </span>
-      </div>
-    </form>
-  </div>
-  <div class="col-md-4">
-    <div class="panel">
-      <div class="panel-body">
-        <ul class="chat-users m0">
-          <h4>Online<small> ({{ numConnectedUsers }})</small></h4>
-          <li data-stats="online" ng-repeat="user in users" ng-show="user.connected">
-            <a href="javascript:;">
-              <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
-              <span>{{ user.name }}</span>
-            </a>
-          </li>
-          <hr class="outsider">
-          <h4>All Contacts<small> ({{ users.length - numConnectedUsers }})</small></h4>
-          <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
-            <a href="javascript:;">
-              <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
-              <span>{{ user.name }}</span>
-            </a>
-          </li>
-        </ul>
+      <div class="chat-text">
+        <small ng-if="message.sender._id !== getCurrentUser()._id" style="font-size: 0.8em;">{{ ::message.sender.name }}</small>
+        <small ng-if="message.sender._id === getCurrentUser()._id" style="font-size: 0.8em;">You</small>
+        <br/>
+        <div ng-bind-html="message.content | enhanceText"></div>
       </div>
     </div>
   </div>
+  <div style="margin: 5px;">
+    <span style="margin-left:5px;" ng-repeat="user in rooms[currentRoomIndex].users" class="badge badge-primary" ng-show="user._id !== getCurrentUser()._id">
+      {{ user.name }}&nbsp;
+      <i style="cursor: pointer;" class="fa fa-times" ng-click="ban(user)"></i>
+    </span>
+    <span class="badge badge-default">You</span>
+  </div>
+  <form ng-submit="sendMessage()">
+    <div class="input-group">
+      <input ng-disabled="currentRoomIndex === -1" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
+      <span class="input-group-btn">
+        <button ng-disabled="currentRoomIndex === -1" type="button" ng-click="additionActivation()" ng-class="{'btn-inverse': inAddition, 'btn-default': !inAddtion }" class="btn"><i class="fa fa-plus"></i></button>
+        <button ng-disabled="currentRoomIndex === -1" type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
+      </span>
+    </div>
+  </form>
+</div>
+<div class="col-md-4">
+  <div class="panel">
+    <div class="panel-body">
+      <ul class="chat-users m0">
+        <h4>Online<small>({{ numConnectedUsers }})</small></h4>
+        <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
+        <li data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
+          <a href="javascript:;">
+            <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
+            <span>{{ user.name }}</span>
+          </a>
+        </li>
+        <hr class="outsider">
+        <h4>All Contacts<small> ({{ users.length - numConnectedUsers }})</small></h4>
+        <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
+          <a href="javascript:;">
+            <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
+            <span>{{ user.name }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
 </div>

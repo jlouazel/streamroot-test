@@ -1,9 +1,31 @@
 'use strict';
 
+String.prototype.trunc = function(n,useWordBoundary){
+  var toLong = this.length>n,
+  s_ = toLong ? this.substr(0,n-1) : this;
+  s_ = useWordBoundary && toLong ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
+  return  toLong ? s_ + '&hellip;' : s_;
+};
+
+function makeid() {
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+  for( var i=0; i < 10; i++ ) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
+  return text;
+}
+
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
+
+  $scope.rooms = [];
+  $scope.currentRoomIndex = -1;
+
+  $scope.query = '';
 
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
@@ -16,8 +38,7 @@ angular.module('streamrootTestApp')
 
       angular.forEach(connectedUsers, function(user) {
         var found = _.find($scope.users, {'_id': user});
-
-        if (found) {
+        if (found && found._id !== $scope.getCurrentUser()._id && !found.connected) {
           found.connected = true;
           $scope.numConnectedUsers++;
         }
@@ -27,6 +48,8 @@ angular.module('streamrootTestApp')
 
   $scope.clientId = null;
 
+  $scope.inAddition = false;
+
   $scope.message = '';
   $scope.messageQueue = [];
 
@@ -35,8 +58,6 @@ angular.module('streamrootTestApp')
   var isInitiator = false;
 
   var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
-
-  $scope.room = 'plop';
 
 
   socket.socket.on('alive', function(clientId, userId) {
@@ -48,93 +69,225 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('dead', function(socketid, userId) {
-    _.find($scope.users, {'_id': userId}).connected = false;
+    var user =  _.find($scope.users, {'_id': userId})
+    if (user) {
+      user.connected = false;
+      $scope.numConnectedUsers--;
+    }
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
-    console.log('Server IP address is: ' + ipaddr);
+    // console.log('Server IP address is: ' + ipaddr);
     // updateRoomURL(ipaddr);
   });
 
   socket.socket.on('created', function (room, clientId) {
+    console.log('CREATED');
     $scope.clientId = clientId;
-    console.log('Created room', $scope.room, '- my client ID is', clientId);
+
+    updateRoomName(room);
+    $scope.rooms.push(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+
+    socket.socket.emit('add', room, room.users[0]._id);
+
+    // console.log('Created room', $scope.room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
   socket.socket.on('joined', function (room, clientId) {
-    $scope.clientId = clientId;
-    console.log('This peer has joined room', room, 'with client ID', clientId);
-    isInitiator = false;
+    updateRoomName(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
   });
 
+  socket.socket.on('ban', function(room) {
+    console.log('BAN');
+    $scope.rooms.splice(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+  });
 
+  socket.socket.on('leave', function(user, room) {
+    console.log('LEAVE');
+
+    var _room = _.find($scope.rooms, {'id': room.id});
+    if (_room) {
+      for (var i = 0, len = _room.users.length; i < len; i++) {
+        if (_room.users[i] && _room.users[i]._id === user._id) {
+          _room.users.splice(i, 1);
+        }
+      }
+      if (_room.users.length === 1) {
+        for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+          if (_room.id === $scope.rooms[i].id) {
+            $scope.rooms.splice(i, 1);
+            $scope.currentRoomIndex = $scope.rooms.length - 1;
+          }
+        }
+      }
+    }
+  });
 
   socket.socket.on('ready', function () {
     createPeerConnection(isInitiator, configuration);
   })
 
   socket.socket.on('log', function (array) {
-    console.log.apply(console, array);
+    // console.log.apply(console, array);
   });
 
-  socket.socket.on('message', function (message, clientId, userId) {
-    console.log('Client ', clientId,  ' received message:', message);
-
+  socket.socket.on('message', function (message, clientId, userId, room) {
     if (!message.type && clientId != $scope.clientId) {
       var user = _.find($scope.users, {'_id': userId});
-      $scope.messageQueue.push({content: message, sender: user});
-      $timeout(function() {
-        document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-      }, 100);
+
+      if (!_.find($scope.rooms, {'id': room.id})) {
+        $scope.rooms.push(room);
+        $scope.currentRoomIndex = $scope.rooms.length - 1;
+      }
+      else if (userId !== $scope.getCurrentUser()._id) {
+        $scope.rooms[$scope.currentRoomIndex].messages.push({content: message, sender: user});
+        $timeout(function() {
+          document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+        }, 200);
+      }
     }
     else
     signalingMessageCallback(message, clientId);
   });
 
   // Join a room
-  socket.socket.emit('create or join', $scope.room);
+  // socket.socket.emit('create or join', $scope.room);
 
-  if (location.hostname.match(/localhost|127\.0\.0/)) {
-    socket.socket.emit('ipaddr');
+  function isInRoom(room, userId) {
+    return !!_.find(room.users, {'_id': userId});
   }
 
+  $scope.ban = function(user) {
+    socket.socket.emit('ban', user, $scope.rooms[$scope.currentRoomIndex]);
+  };
+
+  $scope.initRoom = function(user) {
+    if (!$scope.inAddition) {
+      var room = {
+        id: makeid(),
+        users: [user, $scope.getCurrentUser()],
+        messages: []
+      };
+
+      var index = getRoomIndex(room);
+
+      //
+      if (index === -1) {
+        updateRoomName(room);
+        $scope.currentRoomIndex = $scope.rooms.length - 1;
+        socket.socket.emit('create or join', room);
+        socket.socket.emit('add', room, user._id);
+      } else {
+        $scope.currentRoomIndex = index;
+      }
+    } else {
+      var currentRoom = $scope.rooms[$scope.currentRoomIndex];
+      if (!isInRoom(currentRoom, user._id)) {
+        currentRoom.users.push(user);
+        updateRoomName(currentRoom);
+        socket.socket.emit('add', currentRoom, user._id);
+        $scope.inAddition = false;
+      }
+    }
+  };
+
+  $scope.additionActivation = function() {
+    var currentRoom = $scope.rooms[$scope.currentRoomIndex];
+
+    if (currentRoom.users.length < 5) {
+      $scope.inAddition = !$scope.inAddition;
+    } else {
+      // TODO: Print that the room is full
+    }
+  };
   /**
   * Send message to signaling server
   */
   $scope.sendMessage = function(message) {
     if (message) {
       socket.socket.emit('message', message);
-    } else {
-      console.log('Client sending message: ', $scope.message);
-      socket.socket.emit('message', $scope.message, $scope.room);
+    } else if ($scope.message) {
+      var currentRoom = $scope.rooms[$scope.currentRoomIndex];
 
-      $scope.messageQueue.push({
+      currentRoom.messages.push({
         content: $scope.message,
         sender: $scope.getCurrentUser()
       });
 
+      if (currentRoom.messages.length === 1) {
+        socket.socket.emit('notify', currentRoom, currentRoom.users[0]._id);
+      }
+
+      socket.socket.emit('message', $scope.message, $scope.rooms[$scope.currentRoomIndex]);
 
       $timeout(function() {
         document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-      }, 100);
+      }, 200);
 
       $scope.message = '';
 
     }
+  };
+
+
+  if (location.hostname.match(/localhost|127\.0\.0/)) {
+    socket.socket.emit('ipaddr');
   }
+
+  function updateRoomName(room) {
+    room.name = '';
+    console.log();
+    for (var i = 0, len = room.users.length; i < len; i++) {
+      if (room.users[i]._id !== $scope.getCurrentUser()._id) {
+        room.name += room.users[i].name;
+      }
+    }
+    if (room.name.length > 37) {
+      room.name.trunc(37);
+    }
+  }
+
+  function getRoomIndex(room) {
+    console.log();
+    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+      if ($scope.rooms[i].users.length === room.users.length) {
+        var onlyInA = $scope.rooms[i].users.filter(function(current){
+          return room.users.filter(function(current_b){
+            return current_b._id == current._id
+          }).length == 0
+        });
+
+        var onlyInB = room.users.filter(function(current){
+          return $scope.rooms[i].users.filter(function(current_a){
+            return current_a._id == current._id
+          }).length == 0
+        });
+
+        if (!onlyInA.concat(onlyInB).length) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+
 
   var peerConn;
   var dataChannel;
 
   function signalingMessageCallback(message, clientId) {
     if (message.type === 'offer') {
-      console.log('Got offer. Sending answer to peer.');
+      // console.log('Got offer. Sending answer to peer.');
       peerConn.setRemoteDescription(new RTCSessionDescription(message), function(){}, logError);
       peerConn.createAnswer(onLocalSessionCreated, logError);
 
     } else if (message.type === 'answer') {
-      console.log('Got answer.');
+      // console.log('Got answer.');
       peerConn.setRemoteDescription(new RTCSessionDescription(message), function(){}, logError);
 
     } else if (message.type === 'candidate') {
@@ -146,12 +299,12 @@ angular.module('streamrootTestApp')
   }
 
   function createPeerConnection(isInitiator, config) {
-    console.log('Creating Peer connection as initiator?', isInitiator, 'config:', config);
+    // console.log('Creating Peer connection as initiator?', isInitiator, 'config:', config);
     peerConn = new RTCPeerConnection(config);
 
     // send any ice candidates to the other peer
     peerConn.onicecandidate = function (event) {
-      console.log('onIceCandidate event:', event);
+      // console.log('onIceCandidate event:', event);
       if (event.candidate) {
         $scope.sendMessage({
           type: 'candidate',
@@ -161,20 +314,20 @@ angular.module('streamrootTestApp')
         });
 
       } else {
-        console.log('End of candidates.');
+        // console.log('End of candidates.');
       }
     };
 
     if (isInitiator) {
-      console.log('Creating Data Channel');
+      // console.log('Creating Data Channel');
       dataChannel = peerConn.createDataChannel("photos");
       onDataChannelCreated(dataChannel);
 
-      console.log('Creating an offer');
+      // console.log('Creating an offer');
       peerConn.createOffer(onLocalSessionCreated, logError);
     } else {
       peerConn.ondatachannel = function (event) {
-        console.log('ondatachannel:', event.channel);
+        // console.log('ondatachannel:', event.channel);
         dataChannel = event.channel;
         onDataChannelCreated(dataChannel);
       };
@@ -182,18 +335,18 @@ angular.module('streamrootTestApp')
   }
 
   function onLocalSessionCreated(desc) {
-    console.log('local session created:', desc);
+    // console.log('local session created:', desc);
     peerConn.setLocalDescription(desc, function () {
-      console.log('sending local desc:', peerConn.localDescription);
+      // console.log('sending local desc:', peerConn.localDescription);
       $scope.sendMessage(peerConn.localDescription);
     }, logError);
   }
 
   function onDataChannelCreated(channel) {
-    console.log('onDataChannelCreated:', channel);
+    // console.log('onDataChannelCreated:', channel);
 
     channel.onopen = function () {
-      console.log('CHANNEL opened!!!');
+      // console.log('CHANNEL opened!!!');
     };
 
     channel.onmessage = (webrtcDetectedBrowser == 'firefox') ?
@@ -208,7 +361,7 @@ angular.module('streamrootTestApp')
       if (typeof event.data === 'string') {
         buf = window.buf = new Uint8ClampedArray(parseInt(event.data));
         count = 0;
-        console.log('Expecting a total of ' + buf.byteLength + ' bytes');
+        // console.log('Expecting a total of ' + buf.byteLength + ' bytes');
         return;
       }
 
@@ -216,18 +369,18 @@ angular.module('streamrootTestApp')
       buf.set(data, count);
 
       count += data.byteLength;
-      console.log('count: ' + count);
+      // console.log('count: ' + count);
 
       if (count == buf.byteLength) {
         // we're done: all data chunks have been received
-        console.log('Done. Rendering photo.');
+        // console.log('Done. Rendering photo.');
         renderPhoto(buf);
       }
     }
   }
 
   function logError(err) {
-    console.log(err.toString(), err);
+    // console.log(err.toString(), err);
   }
 
   function receiveDataFirefoxFactory() {
@@ -244,17 +397,17 @@ angular.module('streamrootTestApp')
 
       parts.push(event.data);
       count += event.data.size;
-      console.log('Got ' + event.data.size + ' byte(s), ' + (total - count) + ' to go.');
+      // console.log('Got ' + event.data.size + ' byte(s), ' + (total - count) + ' to go.');
 
       if (count == total) {
-        console.log('Assembling payload')
+        // console.log('Assembling payload')
         var buf = new Uint8ClampedArray(total);
         var compose = function(i, pos) {
           var reader = new FileReader();
           reader.onload = function() {
             buf.set(new Uint8ClampedArray(this.result), pos);
             if (i + 1 == parts.length) {
-              console.log('Done. Rendering photo.');
+              // console.log('Done. Rendering photo.');
               renderPhoto(buf);
             } else {
               compose(i + 1, pos + this.result.byteLength);
@@ -267,5 +420,8 @@ angular.module('streamrootTestApp')
     }
   }
 
+  $scope.select = function(index) {
+    $scope.currentRoomIndex = index;
+  };
 
 });

@@ -6,6 +6,7 @@
 
 var config = require('./environment'),
 os = require('os'),
+_ = require('lodash'),
 numClients = 0;
 
 // When the user disconnects.. perform this
@@ -51,6 +52,15 @@ module.exports = function (socketio) {
 
     socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 
+    socket.on('add', function(room, userId) {
+      var sockets = socketio.sockets.sockets;
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === userId) {
+          sockets[i].join(room.id);
+        }
+      }
+    });
+
     // Call onDisconnect.
     socket.on('disconnect', function () {
       socketio.emit('dead', socket.id, socket.decoded_token._id);
@@ -69,43 +79,60 @@ module.exports = function (socketio) {
       // socket.emit('log', array);
     }
 
-    socket.on('message', function (message, room) {
-      log('Client said:', message);
-      console.log(message);
-      // for a real app, would be room only (not broadcast)
-      socketio.sockets.in(room).emit('message', message,  socket.id, socket.decoded_token._id);
+    socket.on('add', function(room, userId) {
+      var sockets = socketio.sockets.sockets;
+
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === userId) {
+          sockets[i].join(room.id);
+          sockets[i].emit('joined', room);
+        }
+      }
     });
+
+    socket.on('message', function (message, room) {
+      log('Client said:', message, 'in', room.id);
+      socketio.sockets.in(room.id).emit('message', message, socket.id, socket.decoded_token._id, room);
+    });
+
+
 
     socket.on('create or join', function (room) {
       log('Request to create or join room ' + room);
-      var numClients = 0;
 
-      var _room = socketio.of('/').adapter.rooms[room];
-      if (_room) {
-        for (var property in _room) {
-          if(_room.hasOwnProperty(property))
-            numClients++;
-        }
-      }
-
-      console.log(_room);
+      var numClients = socketio.sockets.in(room.id).length || 0;
 
       log('Room ' + room + ' has ' + numClients + ' client(s)');
       if (numClients === 0){
         console.log('>>>>> created');
-        socket.join(room);
+        socket.join(room.id);
         socket.emit('created', room, socket.id);
       } else if (numClients <= 5) {
         console.log('>>>>> joined');
-        socket.join(room);
+        socket.join(room.id);
         socket.emit('joined', room, socket.id);
-        socketio.sockets.in(room).emit('ready');
+        socketio.sockets.in(room.id).emit('ready');
 
       } else {
         console.log('>>>>> full');
-        socket.emit('full', room);
+        socket.emit('full', room.id);
       }
       numClients++;
+    });
+
+    socket.on('ban', function(user, room) {
+      var sockets = socketio.sockets.sockets;
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === user._id) {
+          sockets[i].leave(room.id);
+          sockets[i].emit('ban', room);
+        }
+      }
+
+      socketio.sockets.in(room.id).emit('leave', user, room);
+      if (socketio.sockets.in(room.id).length === 2) {
+        socket.leave(room.id);
+      }
     });
 
     socket.on('ipaddr', function () {

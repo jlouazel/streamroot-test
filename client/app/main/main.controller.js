@@ -66,14 +66,6 @@ angular.module('streamrootTestApp')
     }
   });
 
-  socket.socket.on('notify', function(room) {
-    console.log('NOTIFIED');
-    updateRoomName(room);
-
-    // $scope.rooms.push(room);
-    $scope.currentRoomIndex = $scope.rooms.length - 1;
-  });
-
   socket.socket.on('dead', function(socketid, userId) {
     console.log('DEAD');
     var user =  _.find($scope.users, {'_id': userId})
@@ -103,10 +95,8 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('joined', function (room, clientId) {
-    $scope.clientId = clientId;
-    console.log('JOINED');
-    // console.log('This peer has joined room', room, 'with client ID', clientId);
-    isInitiator = false;
+    updateRoomName(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
   });
 
 
@@ -152,15 +142,15 @@ angular.module('streamrootTestApp')
 
     var index = getRoomIndex(room);
     //
-    // if (index === -1) {
-    //   updateRoomName(room);
-    //   $scope.rooms.push(room);
-    //   $scope.currentRoomIndex = $scope.rooms.length - 1;
-    socket.socket.emit('create or join', room);
-    //   socket.socket.emit('add', room, user._id);
-    // } else {
-    $scope.currentRoomIndex = index;
-    // }
+    if (index === -1) {
+      updateRoomName(room);
+      // $scope.rooms.push(room);
+      $scope.currentRoomIndex = $scope.rooms.length - 1;
+      socket.socket.emit('create or join', room);
+      socket.socket.emit('add', room, user._id);
+    } else {
+      $scope.currentRoomIndex = index;
+    }
   };
 
   /**

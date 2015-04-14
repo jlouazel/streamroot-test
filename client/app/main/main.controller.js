@@ -1,7 +1,6 @@
 'use strict';
 
-String.prototype.trunc =
-function(n,useWordBoundary){
+String.prototype.trunc = function(n,useWordBoundary){
   var toLong = this.length>n,
   s_ = toLong ? this.substr(0,n-1) : this;
   s_ = useWordBoundary && toLong ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
@@ -9,15 +8,14 @@ function(n,useWordBoundary){
 };
 
 function makeid() {
-  var text = "";
-  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var text = '';
+  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-  for( var i=0; i < 10; i++ )
-  text += possible.charAt(Math.floor(Math.random() * possible.length));
+  for( var i=0; i < 10; i++ ) {
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+  }
   return text;
 }
-
-
 
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
@@ -71,6 +69,7 @@ angular.module('streamrootTestApp')
   socket.socket.on('dead', function(socketid, userId) {
     console.log('DEAD');
     var user =  _.find($scope.users, {'_id': userId})
+    console.log(user);
     if (user) {
       user.connected = false;
     }

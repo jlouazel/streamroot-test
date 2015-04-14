@@ -34,6 +34,10 @@ color: #FFFFFF;
       </div>
     </div>
   </div>
+  <div style="margin: 5px;">
+    <span style="margin-left:5px;" ng-repeat="user in rooms[currentRoomIndex].users" class="badge badge-danger" ng-show="user._id !== getCurrentUser()._id">{{ user.name }}</span>
+    <span class="badge badge-default">You</span>
+  </div>
   <form ng-submit="sendMessage()">
     <div class="input-group">
       <input ng-disabled="currentRoomIndex === -1" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">

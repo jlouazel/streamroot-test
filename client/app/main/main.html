@@ -35,7 +35,10 @@ color: #FFFFFF;
     </div>
   </div>
   <div style="margin: 5px;">
-    <span style="margin-left:5px;" ng-repeat="user in rooms[currentRoomIndex].users" class="badge badge-danger" ng-show="user._id !== getCurrentUser()._id">{{ user.name }}</span>
+    <span style="margin-left:5px;" ng-repeat="user in rooms[currentRoomIndex].users" class="badge badge-primary" ng-show="user._id !== getCurrentUser()._id">
+      {{ user.name }}&nbsp;
+      <i style="cursor: pointer;" class="fa fa-ban"></i>
+    </span>
     <span class="badge badge-default">You</span>
   </div>
   <form ng-submit="sendMessage()">

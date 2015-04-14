@@ -112,9 +112,7 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('message', function (message, clientId, userId, room) {
-    console.log('Client ', clientId,  ' received message:', message);
     if (!message.type && clientId != $scope.clientId) {
-      console.log('JE LE PARSE');
       var user = _.find($scope.users, {'_id': userId});
 
       if (!_.find($scope.rooms, {'id': room.id})) {

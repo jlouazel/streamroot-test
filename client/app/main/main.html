@@ -57,7 +57,7 @@
     <div class="panel-body">
       <ul class="chat-users m0">
         <h4>Online<small>({{ numConnectedUsers }})</small></h4>
-        <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
+        <input id="filesend" type="text" placeholder="Search" ng-model="query" style="margin-bottom: 10px;"class="input-sm form-control">
         <li data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">

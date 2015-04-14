@@ -19,6 +19,13 @@ function makeid() {
 
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
+  document.getElementById('filesend').addEventListener('change', function() {
+    fileinput.disabled = true;
+
+    var file = fileinput.files[0];
+    var sender = peer.sendFile(file);
+  });
+
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
@@ -139,17 +146,17 @@ angular.module('streamrootTestApp')
   socket.socket.on('fileTransfer', function (metadata, receiver) {
     console.log('incoming filetransfer', metadata.name, metadata);
     receiver.on('progress', function (bytesReceived) {
-        console.log('receive progress', bytesReceived, 'out of', metadata.size);
+      console.log('receive progress', bytesReceived, 'out of', metadata.size);
     });
     // get notified when file is done
     receiver.on('receivedFile', function (file, metadata) {
-        console.log('received file', metadata.name, metadata.size);
+      console.log('received file', metadata.name, metadata.size);
 
-        // close the channel
-        receiver.channel.close();
+      // close the channel
+      receiver.channel.close();
     });
     filelist.appendChild(item);
-});
+  });
 
   socket.socket.on('message', function (message, clientId, userId, room) {
     if (!message.type && clientId != $scope.clientId) {

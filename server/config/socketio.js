@@ -99,15 +99,8 @@ module.exports = function (socketio) {
 
     socket.on('create or join', function (room) {
       log('Request to create or join room ' + room);
-      var numClients = 0;
 
-      var _room = socketio.of('/').adapter.rooms[room];
-      if (_room) {
-        for (var property in _room) {
-          if(_room.hasOwnProperty(property))
-          numClients++;
-        }
-      }
+      var numClients = socketio.sockets.in(room.id).length || 0;
 
       log('Room ' + room + ' has ' + numClients + ' client(s)');
       if (numClients === 0){
@@ -122,9 +115,24 @@ module.exports = function (socketio) {
 
       } else {
         console.log('>>>>> full');
-        socket.emit('full', room);
+        socket.emit('full', room.id);
       }
       numClients++;
+    });
+
+    socket.on('ban', function(user, room) {
+      var sockets = socketio.sockets.sockets;
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === user._id) {
+          sockets[i].leave(room.id);
+          sockets[i].emit('ban', room);
+        }
+      }
+
+      socketio.sockets.in(room.id).emit('leave', user, room);
+      if (socketio.sockets.in(room.id).length === 2) {
+        socket.leave(room.id);
+      }
     });
 
     socket.on('ipaddr', function () {

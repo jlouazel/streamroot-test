@@ -67,13 +67,11 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('dead', function(socketid, userId) {
-    console.log('DEAD');
     var user =  _.find($scope.users, {'_id': userId})
-    console.log(user);
     if (user) {
       user.connected = false;
+      $scope.numConnectedUsers--;
     }
-    $scope.numConnectedUsers--;
   });
 
   socket.socket.on('ipaddr', function (ipaddr) {
@@ -100,7 +98,32 @@ angular.module('streamrootTestApp')
     $scope.currentRoomIndex = $scope.rooms.length - 1;
   });
 
+  socket.socket.on('ban', function(room) {
+    console.log('BAN');
+    $scope.rooms.splice(room);
+    $scope.currentRoomIndex = $scope.rooms.length - 1;
+  });
 
+  socket.socket.on('leave', function(user, room) {
+    console.log('LEAVE');
+
+    var _room = _.find($scope.rooms, {'id': room.id});
+    if (_room) {
+      for (var i = 0, len = _room.users.length; i < len; i++) {
+        if (_room.users[i] && _room.users[i]._id === user._id) {
+          _room.users.splice(i, 1);
+        }
+      }
+      if (_room.users.length === 1) {
+        for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+          if (_room.id === $scope.rooms[i].id) {
+            $scope.rooms.splice(i, 1);
+            $scope.currentRoomIndex = $scope.rooms.length - 1;
+          }
+        }
+      }
+    }
+  });
 
   socket.socket.on('ready', function () {
     createPeerConnection(isInitiator, configuration);
@@ -136,8 +159,11 @@ angular.module('streamrootTestApp')
     return !!_.find(room.users, {'_id': userId});
   }
 
-  $scope.initRoom = function(user) {
+  $scope.ban = function(user) {
+    socket.socket.emit('ban', user, $scope.rooms[$scope.currentRoomIndex]);
+  };
 
+  $scope.initRoom = function(user) {
     if (!$scope.inAddition) {
       var room = {
         id: makeid(),
@@ -212,6 +238,7 @@ angular.module('streamrootTestApp')
 
   function updateRoomName(room) {
     room.name = '';
+    console.log();
     for (var i = 0, len = room.users.length; i < len; i++) {
       if (room.users[i]._id !== $scope.getCurrentUser()._id) {
         room.name += room.users[i].name;
@@ -219,7 +246,6 @@ angular.module('streamrootTestApp')
     }
     if (room.name.length > 37) {
       room.name.trunc(37);
-      room.name += '...'
     }
   }
 

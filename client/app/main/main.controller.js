@@ -18,7 +18,8 @@ function makeid() {
 }
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout) {
+.controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout',
+function ($scope, socket, Auth, User, _, $timeout) {
 
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
@@ -78,22 +79,12 @@ angular.module('streamrootTestApp')
     }
   });
 
-  socket.socket.on('ipaddr', function (ipaddr) {
-    // console.log('Server IP address is: ' + ipaddr);
-    // updateRoomURL(ipaddr);
-  });
-
   socket.socket.on('created', function (room, clientId) {
-    console.log('CREATED');
     $scope.clientId = clientId;
-
     updateRoomName(room);
     $scope.rooms.push(room);
     $scope.currentRoomIndex = $scope.rooms.length - 1;
 
-    socket.socket.emit('add', room, room.users[0]._id);
-
-    // console.log('Created room', $scope.room, '- my client ID is', clientId);
     isInitiator = true;
   });
 
@@ -103,14 +94,11 @@ angular.module('streamrootTestApp')
   });
 
   socket.socket.on('ban', function(room) {
-    console.log('BAN');
     $scope.rooms.splice(room);
     $scope.currentRoomIndex = $scope.rooms.length - 1;
   });
 
   socket.socket.on('leave', function(user, room) {
-    console.log('LEAVE');
-
     var _room = _.find($scope.rooms, {'id': room.id});
     if (_room) {
       for (var i = 0, len = _room.users.length; i < len; i++) {
@@ -133,9 +121,6 @@ angular.module('streamrootTestApp')
     createPeerConnection(isInitiator, configuration);
   })
 
-  socket.socket.on('log', function (array) {
-    // console.log.apply(console, array);
-  });
 
   socket.socket.on('message', function (message, clientId, userId, room) {
     if (!message.type && clientId != $scope.clientId) {
@@ -152,12 +137,7 @@ angular.module('streamrootTestApp')
         }, 200);
       }
     }
-    else
-    signalingMessageCallback(message, clientId);
   });
-
-  // Join a room
-  // socket.socket.emit('create or join', $scope.room);
 
   function isInRoom(room, userId) {
     return !!_.find(room.users, {'_id': userId});
@@ -182,18 +162,7 @@ angular.module('streamrootTestApp')
         updateRoomName(room);
         $scope.currentRoomIndex = $scope.rooms.length - 1;
 
-
         socket.socket.emit('init', room);
-        console.log('HERE');
-        var webrtc = new SimpleWebRTC({});
-        // webrtc.on('readyToCall', function () {
-        webrtc.on('message', function(message) {
-          console.log('MESSAGE FROM WEBRTC', message);
-        });
-        webrtc.joinRoom(room.id);
-        // });
-        $scope.roomsRTC.push(webrtc);
-
         socket.socket.emit('add', room, user._id);
       } else {
         $scope.currentRoomIndex = index;
@@ -221,10 +190,14 @@ angular.module('streamrootTestApp')
   /**
   * Send message to signaling server
   */
+
+
   $scope.sendMessage = function() {
-    $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', $scope.message);
-    console.log($scope.roomsRTC[0]);
+
+
     if ($scope.message) {
+      // $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', {data: 'some text'});
+
       var currentRoom = $scope.rooms[$scope.currentRoomIndex];
 
       currentRoom.messages.push({
@@ -254,7 +227,6 @@ angular.module('streamrootTestApp')
 
   function updateRoomName(room) {
     room.name = '';
-    console.log();
     for (var i = 0, len = room.users.length; i < len; i++) {
       if (room.users[i]._id !== $scope.getCurrentUser()._id) {
         room.name += room.users[i].name;
@@ -266,7 +238,6 @@ angular.module('streamrootTestApp')
   }
 
   function getRoomIndex(room) {
-    console.log();
     for (var i = 0, len = $scope.rooms.length; i < len; i++) {
       if ($scope.rooms[i].users.length === room.users.length) {
         var onlyInA = $scope.rooms[i].users.filter(function(current){
@@ -293,4 +264,4 @@ angular.module('streamrootTestApp')
     $scope.currentRoomIndex = index;
   };
 
-});
+}]);

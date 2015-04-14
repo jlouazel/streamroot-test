@@ -28,16 +28,6 @@ function onConnect(socket) {
 module.exports = function (socketio) {
   require('../api/user/user.socket').register(socketio);
 
-  // socket.io (v1.x.x) is powered by debug.
-  // In order to see all the debug output, set DEBUG (in server/config/local.env.js) to including the desired scope.
-  //
-  // ex: DEBUG: "http*,socket.io:socket"
-
-  // We can authenticate socket.io users and access their token through socket.handshake.decoded_token
-  //
-  // 1. You will need to send the token in `client/components/socket/socket.service.js`
-  //
-  // 2. Require authentication here:
   socketio.use(require('socketio-jwt').authorize({
     secret: config.secrets.session,
     handshake: true
@@ -65,18 +55,13 @@ module.exports = function (socketio) {
     socket.on('disconnect', function () {
       socketio.emit('dead', socket.id, socket.decoded_token._id);
       onDisconnect(socket);
-      console.info('[%s] DISCONNECTED', socket.address);
     });
 
-    // Call onConnect.
     onConnect(socket);
-    console.info('[%s] CONNECTED', socket.address);
-
 
     function log(){
       var array = [">>> Message from server:"];
       array.push.apply(array, arguments);
-      // socket.emit('log', array);
     }
 
     socket.on('add', function(room, userId) {
@@ -98,25 +83,8 @@ module.exports = function (socketio) {
 
 
     socket.on('init', function (room) {
-      console.log('INIT');
-      // var numClients = socketio.sockets.in(room.id).length || 0;
-
-      // log('Room ' + room + ' has ' + numClients + ' client(s)');
-      // if (numClients === 0){
-      // console.log('>>>>> created');
       socket.join(room.id);
       socket.emit('created', room, socket.id);
-      // } else if (numClients <= 5) {
-      //   console.log('>>>>> joined');
-      //   socket.join(room.id);
-      //   socket.emit('joined', room, socket.id);
-      //   socketio.sockets.in(room.id).emit('ready');
-      //
-      // } else {
-      //   console.log('>>>>> full');
-      //   socket.emit('full', room.id);
-      // }
-      // numClients++;
     });
 
     socket.on('ban', function(user, room) {
@@ -131,17 +99,6 @@ module.exports = function (socketio) {
       socketio.sockets.in(room.id).emit('leave', user, room);
       if (socketio.sockets.in(room.id).length === 2) {
         socket.leave(room.id);
-      }
-    });
-
-    socket.on('ipaddr', function () {
-      var ifaces = os.networkInterfaces();
-      for (var dev in ifaces) {
-        ifaces[dev].forEach(function (details) {
-          if (details.family=='IPv4' && details.address != '127.0.0.1') {
-            socket.emit('ipaddr', details.address);
-          }
-        });
       }
     });
   });

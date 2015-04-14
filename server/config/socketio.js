@@ -52,6 +52,15 @@ module.exports = function (socketio) {
 
     socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 
+    socket.on('add', function(room, userId) {
+      var sockets = socketio.sockets.sockets;
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === userId) {
+          sockets[i].join(room.id);
+        }
+      }
+    });
+
     // Call onDisconnect.
     socket.on('disconnect', function () {
       socketio.emit('dead', socket.id, socket.decoded_token._id);
@@ -70,21 +79,22 @@ module.exports = function (socketio) {
       // socket.emit('log', array);
     }
 
-    socket.on('speak', function(userid, room) {
+    socket.on('notify', function(room, userId) {
       var sockets = socketio.sockets.sockets;
+
       for (var i = 0, len = sockets.length; i < len; i++) {
-        if (sockets[i].decoded_token._id === userid) {
+        if (sockets[i].decoded_token._id === userId) {
           sockets[i].join(room.id);
-          sockets[i].emit('speaked', room);
+          sockets[i].emit('notify', room);
         }
       }
     });
 
     socket.on('message', function (message, room) {
-      log('Client said:', message);
-      console.log(message);
+      console.log('>>> Message', message, room);
 
-      socketio.sockets.in(room).emit('message', message,  socket.id, socket.decoded_token._id);
+      log('Client said:', message, 'in', room.id);
+      socketio.sockets.in(room.id).emit('message', message, socket.id, socket.decoded_token._id, room);
     });
 
 
@@ -101,18 +111,16 @@ module.exports = function (socketio) {
         }
       }
 
-      console.log(_room);
-
       log('Room ' + room + ' has ' + numClients + ' client(s)');
       if (numClients === 0){
         console.log('>>>>> created');
-        socket.join(room);
+        socket.join(room.id);
         socket.emit('created', room, socket.id);
       } else if (numClients <= 5) {
         console.log('>>>>> joined');
-        socket.join(room);
+        socket.join(room.id);
         socket.emit('joined', room, socket.id);
-        socketio.sockets.in(room).emit('ready');
+        socketio.sockets.in(room.id).emit('ready');
 
       } else {
         console.log('>>>>> full');

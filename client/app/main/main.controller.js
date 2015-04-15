@@ -54,15 +54,10 @@ function ($scope, socket, Auth, User, _, $timeout) {
   $scope.inAddition = false;
 
   $scope.message = '';
-  $scope.messageQueue = [];
 
-  $scope.clientsPool = [];
-
-  var isInitiator = false;
-
-  var configuration = {'iceServers': [{'url': 'stun:stun.l.google.com:19302'}]};
-
-
+  /*
+   * Set the user as connected when his socket connects to the application
+   */
   socket.socket.on('alive', function(clientId, userId) {
     var user = _.find($scope.users, {'_id': userId});
     if (user) {
@@ -71,25 +66,26 @@ function ($scope, socket, Auth, User, _, $timeout) {
     }
   });
 
+/*
+ *  
+ */
   socket.socket.on('dead', function(socketid, userId) {
-    var user =  _.find($scope.users, {'_id': userId})
+    var user =  _.find($scope.users, {'_id': userId});
     if (user) {
       user.connected = false;
       $scope.numConnectedUsers--;
     }
   });
 
-  socket.socket.on('created', function (room, clientId) {
-    $scope.clientId = clientId;
+  socket.socket.on('created', function (room) {
     updateRoomName(room);
     $scope.rooms.push(room);
     $scope.currentRoomIndex = $scope.rooms.length - 1;
-
-    isInitiator = true;
   });
 
-  socket.socket.on('joined', function (room, clientId) {
+  socket.socket.on('joined', function (room) {
     updateRoomName(room);
+    $scope.rooms.push(room);
     $scope.currentRoomIndex = $scope.rooms.length - 1;
   });
 
@@ -107,9 +103,9 @@ function ($scope, socket, Auth, User, _, $timeout) {
         }
       }
       if (_room.users.length === 1) {
-        for (var i = 0, len = $scope.rooms.length; i < len; i++) {
-          if (_room.id === $scope.rooms[i].id) {
-            $scope.rooms.splice(i, 1);
+        for (var j = 0, len1 = $scope.rooms.length; j < len1; j++) {
+          if (_room.id === $scope.rooms[j].id) {
+            $scope.rooms.splice(j, 1);
             $scope.currentRoomIndex = $scope.rooms.length - 1;
           }
         }
@@ -117,13 +113,8 @@ function ($scope, socket, Auth, User, _, $timeout) {
     }
   });
 
-  socket.socket.on('ready', function () {
-    createPeerConnection(isInitiator, configuration);
-  })
-
-
-  socket.socket.on('message', function (message, clientId, userId, room) {
-    if (!message.type && clientId != $scope.clientId) {
+  socket.socket.on('message', function (message, userId, room) {
+    if (!message.type) {
       var user = _.find($scope.users, {'_id': userId});
 
       if (!_.find($scope.rooms, {'id': room.id})) {
@@ -241,15 +232,15 @@ function ($scope, socket, Auth, User, _, $timeout) {
     for (var i = 0, len = $scope.rooms.length; i < len; i++) {
       if ($scope.rooms[i].users.length === room.users.length) {
         var onlyInA = $scope.rooms[i].users.filter(function(current){
-          return room.users.filter(function(current_b){
-            return current_b._id == current._id
-          }).length == 0
+          return room.users.filter(function(currentB) {
+            return currentB._id === current._id;
+          }).length === 0;
         });
 
         var onlyInB = room.users.filter(function(current){
-          return $scope.rooms[i].users.filter(function(current_a){
-            return current_a._id == current._id
-          }).length == 0
+          return $scope.rooms[i].users.filter(function(currentA){
+            return currentA._id === current._id;
+          }).length === 0;
         });
 
         if (!onlyInA.concat(onlyInB).length) {

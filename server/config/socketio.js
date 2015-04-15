@@ -42,15 +42,6 @@ module.exports = function (socketio) {
 
     socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 
-    socket.on('add', function(room, userId) {
-      var sockets = socketio.sockets.sockets;
-      for (var i = 0, len = sockets.length; i < len; i++) {
-        if (sockets[i].decoded_token._id === userId) {
-          sockets[i].join(room.id);
-        }
-      }
-    });
-
     // Call onDisconnect.
     socket.on('disconnect', function () {
       socketio.emit('dead', socket.id, socket.decoded_token._id);
@@ -58,11 +49,6 @@ module.exports = function (socketio) {
     });
 
     onConnect(socket);
-
-    function log(){
-      var array = [">>> Message from server:"];
-      array.push.apply(array, arguments);
-    }
 
     socket.on('add', function(room, userId) {
       var sockets = socketio.sockets.sockets;
@@ -76,15 +62,14 @@ module.exports = function (socketio) {
     });
 
     socket.on('message', function (message, room) {
-      log('Client said:', message, 'in', room.id);
-      socketio.sockets.in(room.id).emit('message', message, socket.id, socket.decoded_token._id, room);
+      socketio.sockets.in(room.id).emit('message', message, socket.decoded_token._id, room);
     });
 
 
 
     socket.on('init', function (room) {
       socket.join(room.id);
-      socket.emit('created', room, socket.id);
+      socket.emit('created', room);
     });
 
     socket.on('ban', function(user, room) {

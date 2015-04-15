@@ -16,6 +16,7 @@ exports.setup = function (User, config) {
             name: profile.displayName,
             email: profile.emails[0].value,
             role: 'user',
+            picture: profile._json.image.url,
             username: profile.username,
             provider: 'google',
             google: profile._json

@@ -18,7 +18,7 @@ exports.setup = function (User, config) {
         user = new User({
           name: profile.displayName,
           username: profile.username,
-          picture: profile._json.profile_image_url,
+          picture: profile._json.profile_image_url_https,
           role: 'user',
           provider: 'twitter',
           twitter: profile._json

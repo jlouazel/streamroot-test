@@ -18,8 +18,8 @@ function makeid() {
 }
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout',
-function ($scope, socket, Auth, User, _, $timeout) {
+.controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout', 'toastr',
+function ($scope, socket, Auth, User, _, $timeout, toastr) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
   /**
@@ -51,10 +51,19 @@ function ($scope, socket, Auth, User, _, $timeout) {
     for (var i = 0, len = $scope.users.length; i < len; i++) {
       if ($scope.users[i]._id === userId) {
         $scope.users[i].connected = true;
+
+        var picture = $scope.users[i].picture || 'assets/images/no_photo.png';
+
+        toastr.info('<img src="'+ picture + '"' +
+        ' alt="" style="margin-left: -40px; margin-right: 10px;border-radius: 50%;width: 45px;float: left;">' +
+        '<p style="color: #5f7676;"><b>' + $scope.users[i].name + '</b></br>is now connected.</p>', {
+          iconClass: 'toast-default',
+          allowHtml: true
+        });
       }
     }
 
-    console.log('>>>>>>>>>>>>>', userId, 'is now connected.');
+    console.log('>>>>>>>>>>>>>', userId, ' is now connected.');
   });
 
   // This is called when the WebRTC sending data channel is offically 'open'

@@ -4,6 +4,14 @@
   text-decoration: underline;
 }
 
+.toast-default {
+    background-color: #FFFFFF;
+}
+
+.toast-title {
+  color: #5f7676;
+}
+
 </style>
 <div ng-include="'components/navbar/navbar.html'"></div>
 
@@ -54,7 +62,7 @@
       <ul class="chat-users m0">
         <h4>Online<small>({{ numConnectedUsers }})</small></h4>
         <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
-        <li data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
+        <li style="margin-top: 10px;" data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
             <span>{{ user.name }}</span>

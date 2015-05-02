@@ -1,12 +1,5 @@
 'use strict';
 
-String.prototype.trunc = function(n,useWordBoundary){
-  var toLong = this.length>n,
-  s_ = toLong ? this.substr(0,n-1) : this;
-  s_ = useWordBoundary && toLong ? s_.substr(0,s_.lastIndexOf(' ')) : s_;
-  return  toLong ? s_ + '&hellip;' : s_;
-};
-
 function makeid() {
   var text = '';
   var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -22,6 +15,8 @@ angular.module('streamrootTestApp')
 function ($scope, socket, Auth, User, _, $timeout, toastr) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
+  $scope.rooms = [];
+
   /**
   * WEBRTC Stuff
   */
@@ -30,7 +25,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   dataChannel;
 
 
-  var dataChannelName = 'myAwesomeDataChannel';
+  var dataChannelName = makeid();
 
   // Google server for webrtc communication
   var servers = {
@@ -45,14 +40,16 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
 
   var handleDataChannelMessage = function(event) {
     var message = JSON.parse(event.data);
+    message.timeStamp = event.timeStamp;
 
-    console.log(message.sender);
+    console.log(message);
   };
 
-  socket.socket.on('joined', function(userId) {
+  socket.socket.on('joined', function(userId, channelName) {
     for (var i = 0, len = $scope.users.length; i < len; i++) {
       if ($scope.users[i]._id === userId) {
         $scope.users[i].connected = true;
+        $scope.users[i].roomId = channelName;
 
         var picture = $scope.users[i].picture || 'assets/images/no_photo.png';
 
@@ -62,10 +59,18 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
           iconClass: 'toast-default',
           allowHtml: true
         });
+
+        $scope.rooms.push({
+          id: channelName,
+          show: false,
+          name: $scope.users[i].name,
+          messages: []
+        });
+
       }
     }
 
-    console.log('>>>>>>>>>>>>>', userId, ' is now connected.');
+    console.log($scope.rooms);
   });
 
   // This is called when the WebRTC sending data channel is offically 'open'
@@ -105,8 +110,9 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   // .createDataChannel(dataChannelName);
 
   // Annouce arrival
-  socket.socket.emit('ready', $scope.getCurrentUser()._id);
-  socket.socket.on('ready', function(userId) {
+  socket.socket.emit('init', $scope.getCurrentUser()._id);
+
+  socket.socket.on('init', function(userId) {
     initiateWebRTCState();
 
     startSendingCandidates();
@@ -194,18 +200,17 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     _.remove($scope.users, {
       _id: $scope.getCurrentUser()._id
     });
-
-    User.getConnected().$promise.then(function(connectedUsers) {
-
-      angular.forEach(connectedUsers, function(user) {
-        var found = _.find($scope.users, {'_id': user});
-        if (found && found._id !== $scope.getCurrentUser()._id && !found.connected) {
-          found.connected = true;
-          $scope.numConnectedUsers++;
-        }
-      });
-    });
   });
+
+  $scope.showRoom = function(roomId) {
+    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+      if ($scope.rooms[i].id = roomId) {
+        $scope.rooms[i].show = true;
+        $scope.currentRoomIndex = 0;
+        break;
+      }
+    }
+  };
 
   // $scope.clientId = null;
   //
@@ -343,10 +348,16 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   //
   $scope.sendMessage = function() {
     dataChannel.send(JSON.stringify({
+      type: 'message',
       sender: $scope.getCurrentUser()._id,
       body: $scope.message
     }));
 
+    $scope.rooms[$scope.currentRoomIndex].messages.push({
+      sender: $scope.getCurrentUser()._id,
+      body: $scope.message,
+      timeStamp: Date.now()
+    });
 
     // if ($scope.message) {
     //   // $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', {data: 'some text'});

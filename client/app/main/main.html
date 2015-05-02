@@ -5,7 +5,7 @@
 }
 
 .toast-default {
-    background-color: #FFFFFF;
+  background-color: #FFFFFF;
 }
 
 .toast-title {
@@ -23,7 +23,7 @@
       <ul class="dropdown-menu"></ul>
     </li>
     <li ng-class="{'active': $index === currentRoomIndex}" ng-repeat="room in rooms" ng-click="select($index)">
-      <a data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
+      <a ng-show="room.show" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
     </li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
@@ -33,9 +33,10 @@
       </div>
       <div class="chat-text">
         <small ng-if="message.sender._id !== getCurrentUser()._id" style="font-size: 0.8em;">{{ ::message.sender.name }}</small>
-        <small ng-if="message.sender._id === getCurrentUser()._id" style="font-size: 0.8em;">You</small>
+        <small ng-if="message.sender === getCurrentUser()._id" style="font-size: 0.8em;">You</small>
+        <small style="font-size: 0.8em;float:right;">{{ ::message.timeStamp | date:"dd/MM/yyyy 'at' h:mma" }}</small>
         <br/>
-        <div ng-bind-html="message.content | enhanceText"></div>
+        <div ng-bind-html="message.body | enhanceText"></div>
       </div>
     </div>
   </div>
@@ -62,7 +63,7 @@
       <ul class="chat-users m0">
         <h4>Online<small>({{ numConnectedUsers }})</small></h4>
         <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
-        <li style="margin-top: 10px;" data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="initRoom(user)">
+        <li style="margin-top: 10px;" data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="showRoom(user.roomId)">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
             <span>{{ user.name }}</span>

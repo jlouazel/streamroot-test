@@ -46,9 +46,9 @@ module.exports = function (socketio) {
     * WEBRTC Stuff
     */
 
-    socket.on('ready', function(userId) {
+    socket.on('init', function(userId) {
       console.log(userId, 'is connected');
-      socket.broadcast.emit('ready', userId);
+      socket.broadcast.emit('init', userId);
     });
 
     socket.on('signal', function(message) {
@@ -60,7 +60,7 @@ module.exports = function (socketio) {
 
     socket.on('joined', function(userId, channelName) {
       socket.join(channelName);
-      socket.broadcast.emit('joined', userId);
+      socket.broadcast.emit('joined', userId, channelName);
     });
 
     /**
@@ -94,12 +94,6 @@ module.exports = function (socketio) {
       socketio.sockets.in(room.id).emit('message', message, socket.decoded_token._id, room);
     });
 
-
-
-    socket.on('init', function (room) {
-      socket.join(room.id);
-      socket.emit('created', room);
-    });
 
     socket.on('ban', function(user, room) {
       var sockets = socketio.sockets.sockets;

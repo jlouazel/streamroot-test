@@ -20,6 +20,7 @@ function makeid() {
 angular.module('streamrootTestApp')
 .controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout',
 function ($scope, socket, Auth, User, _, $timeout) {
+  $scope.getCurrentUser = Auth.getCurrentUser;
 
   /**
   * WEBRTC Stuff
@@ -34,13 +35,77 @@ function ($scope, socket, Auth, User, _, $timeout) {
     } ]
   };
 
+  var handleDataChannel = function(event) {
+    event.channel.onmessage = handleDataChannelMessage;
+  };
+
+  var handleDataChannelMessage = function(event) {
+    console.log('Message: ' + event.data);
+  };
+
+
   var peerConnection = new webkitRTCPeerConnection(servers);
   peerConnection.ondatachannel = handleDataChannel;
 
   var dataChannel = peerConnection
-  .createDataChannel(dataChannelName)
-  .onmessage(function() { console.log('`onmessage` function triggered.'); })
-  .onopen(function() { console.log('`onopen` function triggered.'); })
+  .createDataChannel(dataChannelName);
+
+
+  dataChannel.onmessage = function() { console.log('`onmessage` function triggered.'); };
+  dataChannel.onopen = function() { console.log('`onopen` function triggered.'); };
+
+
+
+  // Annouce arrival
+  socket.socket.emit('ready', $scope.getCurrentUser()._id);
+
+  socket.socket.on('ready', function(userId) {
+
+    startSendingCandidates();
+    peerConnection.createOffer(function(sessionDescription) {
+      console.log('Sending offer to ' + userId);
+      peerConnection.setLocalDescription(sessionDescription);
+      sendSignalChannelMessage(sessionDescription);
+    });
+
+  });
+
+  var startSendingCandidates = function() {
+    peerConnection.oniceconnectionstatechange = handleICEConnectionStateChange;
+    peerConnection.onicecandidate = handleICECandidate;
+  };
+
+  var handleICEConnectionStateChange = function() {
+    if (peerConnection.iceConnectionState == 'disconnected') {
+      console.log('Client disconnected!');
+      sendAnnounceChannelMessage();
+    }
+  };
+
+  socket.socket.on('signal', function(message) {
+    console.log(message);
+  });
+
+
+  // Handle ICE Candidate events by sending them to our remote
+  // Send the ICE Candidates via the signal channel
+  var handleICECandidate = function(event) {
+    var candidate = event.candidate;
+    if (candidate) {
+      candidate.type = 'candidate';
+      console.log('Sending candidate.');
+      sendSignalChannelMessage(candidate);
+    } else {
+      console.log('All candidates sent');
+    }
+  };
+
+  var sendSignalChannelMessage = function(message) {
+    // message.sender = id;
+    socket.socket.emit('signal', message);
+    // console.log('sendSignalChannelMessage');
+    // database.child('messages').child(remote).push(message);
+  };
 
   /**
   * //WEBRTC Stuff
@@ -50,7 +115,6 @@ function ($scope, socket, Auth, User, _, $timeout) {
 
 
 
-  $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
   $scope.rooms = [];

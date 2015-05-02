@@ -34,11 +34,33 @@ module.exports = function (socketio) {
   }));
 
   socketio.on('connection', function (socket) {
+
+
     socket.address = socket.handshake.address !== null ?
     socket.handshake.address.address + ':' + socket.handshake.address.port :
     process.env.DOMAIN;
 
     socket.connectedAt = new Date();
+
+    /**
+    * WEBRTC Stuff
+    */
+
+    socket.on('ready', function(userId) {
+      console.log(userId, 'is connected');
+      socket.broadcast.emit('ready', userId);
+    });
+
+    socket.on('signal', function(message) {
+      console.log('message:', message);
+      socket.broadcast.emit('signal', message);
+    });
+
+    /**
+    * //WEBRTC Stuff
+    */
+
+
 
     socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 

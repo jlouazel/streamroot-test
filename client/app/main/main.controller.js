@@ -44,7 +44,9 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   };
 
   var handleDataChannelMessage = function(event) {
-    console.log(event);
+    var message = JSON.parse(event.data);
+
+    console.log(message.sender);
   };
 
   socket.socket.on('joined', function(userId) {
@@ -101,7 +103,6 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   //
   // var dataChannel = peerConnection
   // .createDataChannel(dataChannelName);
-
 
   // Annouce arrival
   socket.socket.emit('ready', $scope.getCurrentUser()._id);
@@ -341,7 +342,10 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   //
   //
   $scope.sendMessage = function() {
-    dataChannel.send($scope.message);
+    dataChannel.send(JSON.stringify({
+      sender: $scope.getCurrentUser()._id,
+      body: $scope.message
+    }));
 
 
     // if ($scope.message) {

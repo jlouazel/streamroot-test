@@ -25,6 +25,10 @@ function ($scope, socket, Auth, User, _, $timeout) {
   /**
   * WEBRTC Stuff
   */
+  var running = false,
+  peerConnection,
+  dataChannel;
+
 
   var dataChannelName = 'myAwesomeDataChannel';
 
@@ -43,23 +47,45 @@ function ($scope, socket, Auth, User, _, $timeout) {
     console.log('Message: ' + event.data);
   };
 
+  // This is called when the WebRTC sending data channel is offically 'open'
+  var handleDataChannelOpen = function() {
+    console.log('Data channel created!');
+    dataChannel.send('Hello! I am');
+  };
 
-  var peerConnection = new webkitRTCPeerConnection(servers);
-  peerConnection.ondatachannel = handleDataChannel;
+  // Called when the data channel has closed
+  var handleDataChannelClosed = function() {
+    console.log('The data channel has been closed!');
+  };
 
-  var dataChannel = peerConnection
-  .createDataChannel(dataChannelName);
+  var handleAnswerSignal = function(message) {
+    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+  };
+
+  var handleCandidateSignal = function(message) {
+    var candidate = new RTCIceCandidate(message);
+    peerConnection.addIceCandidate(candidate);
+  };
 
 
-  dataChannel.onmessage = function() { console.log('`onmessage` function triggered.'); };
-  dataChannel.onopen = function() { console.log('`onopen` function triggered.'); };
-
+  var initiateWebRTCState = function() {
+    peerConnection = new webkitRTCPeerConnection(servers);
+    peerConnection.ondatachannel = handleDataChannel;
+    dataChannel = peerConnection.createDataChannel(dataChannelName);
+    dataChannel.onmessage = handleDataChannelMessage;
+    dataChannel.onopen = handleDataChannelOpen;
+  };
+  // var peerConnection = new webkitRTCPeerConnection(servers);
+  // peerConnection.ondatachannel = handleDataChannel;
+  //
+  // var dataChannel = peerConnection
+  // .createDataChannel(dataChannelName);
 
 
   // Annouce arrival
   socket.socket.emit('ready', $scope.getCurrentUser()._id);
-
   socket.socket.on('ready', function(userId) {
+    initiateWebRTCState();
 
     startSendingCandidates();
     peerConnection.createOffer(function(sessionDescription) {
@@ -78,14 +104,23 @@ function ($scope, socket, Auth, User, _, $timeout) {
   var handleICEConnectionStateChange = function() {
     if (peerConnection.iceConnectionState == 'disconnected') {
       console.log('Client disconnected!');
-      sendAnnounceChannelMessage();
+      socket.socket.emit('ready', $scope.getCurrentUser()._id);
     }
   };
 
   socket.socket.on('signal', function(message) {
-    console.log(message);
+    handleSignalChannelMessage(message);
   });
 
+
+  var handleSignalChannelMessage = function(message) {
+    var sender = message.sender;
+    var type = message.type;
+    console.log('Recieved a \'' + type + '\' signal from ' + sender);
+    if (type == 'offer') handleOfferSignal(message);
+    else if (type == 'answer') handleAnswerSignal(message);
+    else if (type == 'candidate' && running) handleCandidateSignal(message);
+  };
 
   // Handle ICE Candidate events by sending them to our remote
   // Send the ICE Candidates via the signal channel
@@ -99,6 +134,19 @@ function ($scope, socket, Auth, User, _, $timeout) {
       console.log('All candidates sent');
     }
   };
+
+  var handleOfferSignal = function(message) {
+    running = true;
+    initiateWebRTCState();
+    startSendingCandidates();
+    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+    peerConnection.createAnswer(function(sessionDescription) {
+      console.log('Sending answer to ' + message.sender);
+      peerConnection.setLocalDescription(sessionDescription);
+      sendSignalChannelMessage(sessionDescription);
+    });
+  };
+
 
   var sendSignalChannelMessage = function(message) {
     message.sender = $scope.getCurrentUser()._id;
@@ -276,6 +324,7 @@ function ($scope, socket, Auth, User, _, $timeout) {
 
 
   $scope.sendMessage = function() {
+    dataChannel.send($scope.message);
 
 
     if ($scope.message) {

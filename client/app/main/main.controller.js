@@ -21,6 +21,35 @@ angular.module('streamrootTestApp')
 .controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout',
 function ($scope, socket, Auth, User, _, $timeout) {
 
+  /**
+  * WEBRTC Stuff
+  */
+
+  var dataChannelName = 'myAwesomeDataChannel';
+
+  // Google server for webrtc communication
+  var servers = {
+    iceServers: [ {
+      url : 'stun:stun.l.google.com:19302'
+    } ]
+  };
+
+  var peerConnection = new webkitRTCPeerConnection(servers);
+  peerConnection.ondatachannel = handleDataChannel;
+
+  var dataChannel = peerConnection
+  .createDataChannel(dataChannelName)
+  .onmessage(function() { console.log('`onmessage` function triggered.'); })
+  .onopen(function() { console.log('`onopen` function triggered.'); })
+
+  /**
+  * //WEBRTC Stuff
+  */
+
+
+
+
+
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.numConnectedUsers = 0;
 
@@ -56,8 +85,8 @@ function ($scope, socket, Auth, User, _, $timeout) {
   $scope.message = '';
 
   /*
-   * Set the user as connected when his socket connects to the application
-   */
+  * Set the user as connected when his socket connects to the application
+  */
   socket.socket.on('alive', function(clientId, userId) {
     var user = _.find($scope.users, {'_id': userId});
     if (user) {
@@ -66,9 +95,9 @@ function ($scope, socket, Auth, User, _, $timeout) {
     }
   });
 
-/*
- *  
- */
+  /*
+  *
+  */
   socket.socket.on('dead', function(socketid, userId) {
     var user =  _.find($scope.users, {'_id': userId});
     if (user) {

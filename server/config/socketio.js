@@ -56,13 +56,20 @@ module.exports = function (socketio) {
       socket.broadcast.emit('signal', message);
     });
 
+    socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
+
+    socket.on('joined', function(userId, channelName) {
+      socket.join(channelName);
+      socket.broadcast.emit('joined', userId);
+    });
+
     /**
     * //WEBRTC Stuff
     */
 
 
 
-    socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
+
 
     // Call onDisconnect.
     socket.on('disconnect', function () {

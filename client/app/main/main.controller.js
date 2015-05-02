@@ -44,12 +44,24 @@ function ($scope, socket, Auth, User, _, $timeout) {
   };
 
   var handleDataChannelMessage = function(event) {
-    console.log('Message: ' + event.data);
+    console.log(event);
   };
 
+  socket.socket.on('joined', function(userId) {
+    for (var i = 0, len = $scope.users.length; i < len; i++) {
+      if ($scope.users[i]._id === userId) {
+        $scope.users[i].connected = true;
+      }
+    }
+
+    console.log('>>>>>>>>>>>>>', userId, 'is now connected.');
+  });
+
   // This is called when the WebRTC sending data channel is offically 'open'
-  var handleDataChannelOpen = function() {
-    console.log('Data channel created!');
+  var handleDataChannelOpen = function(e) {
+    socket.socket.emit('joined', $scope.getCurrentUser()._id, dataChannelName);
+
+    console.log(e);
     dataChannel.send('Hello! I am');
   };
 
@@ -162,14 +174,10 @@ function ($scope, socket, Auth, User, _, $timeout) {
 
 
 
-  // $scope.numConnectedUsers = 0;
-  //
-  // $scope.rooms = [];
-  // $scope.currentRoomIndex = -1;
-  //
-  // $scope.roomsRTC = [];
-  // $scope.query = '';
-  //
+  $scope.numConnectedUsers = 0;
+
+  $scope.query = '';
+
   User.getAll().$promise.then(function(users) {
     $scope.users = users;
 
@@ -177,18 +185,18 @@ function ($scope, socket, Auth, User, _, $timeout) {
       _id: $scope.getCurrentUser()._id
     });
 
-    // User.getConnected().$promise.then(function(connectedUsers) {
-    //
-    //   angular.forEach(connectedUsers, function(user) {
-    //     var found = _.find($scope.users, {'_id': user});
-    //     if (found && found._id !== $scope.getCurrentUser()._id && !found.connected) {
-    //       found.connected = true;
-    //       $scope.numConnectedUsers++;
-    //     }
-    //   });
-    // });
+    User.getConnected().$promise.then(function(connectedUsers) {
+
+      angular.forEach(connectedUsers, function(user) {
+        var found = _.find($scope.users, {'_id': user});
+        if (found && found._id !== $scope.getCurrentUser()._id && !found.connected) {
+          found.connected = true;
+          $scope.numConnectedUsers++;
+        }
+      });
+    });
   });
-  //
+
   // $scope.clientId = null;
   //
   // $scope.inAddition = false;
@@ -323,35 +331,34 @@ function ($scope, socket, Auth, User, _, $timeout) {
   // */
   //
   //
-  // $scope.sendMessage = function() {
-  //   dataChannel.send($scope.message);
-  //
-  //
-  //   if ($scope.message) {
-  //     // $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', {data: 'some text'});
-  //
-  //     var currentRoom = $scope.rooms[$scope.currentRoomIndex];
-  //
-  //     currentRoom.messages.push({
-  //       content: $scope.message,
-  //       sender: $scope.getCurrentUser()
-  //     });
-  //
-  //     if (currentRoom.messages.length === 1) {
-  //       socket.socket.emit('notify', currentRoom, currentRoom.users[0]._id);
-  //     }
-  //
-  //     socket.socket.emit('message', $scope.message, $scope.rooms[$scope.currentRoomIndex]);
-  //
-  //     $timeout(function() {
-  //       document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-  //     }, 200);
-  //
-  //     $scope.message = '';
-  //
-  //   }
-  // };
-  //
+  $scope.sendMessage = function() {
+    dataChannel.send($scope.message);
+
+
+    // if ($scope.message) {
+    //   // $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', {data: 'some text'});
+    //
+    //   var currentRoom = $scope.rooms[$scope.currentRoomIndex];
+    //
+    //   currentRoom.messages.push({
+    //     content: $scope.message,
+    //     sender: $scope.getCurrentUser()
+    //   });
+    //
+    //   if (currentRoom.messages.length === 1) {
+    //     socket.socket.emit('notify', currentRoom, currentRoom.users[0]._id);
+    //   }
+    //
+    //   socket.socket.emit('message', $scope.message, $scope.rooms[$scope.currentRoomIndex]);
+    //
+    //   $timeout(function() {
+    //     document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
+    //   }, 200);
+    //
+    //   $scope.message = '';
+    //
+    // }
+  };
   //
   // if (location.hostname.match(/localhost|127\.0\.0/)) {
   //   socket.socket.emit('ipaddr');

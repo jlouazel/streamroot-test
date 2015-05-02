@@ -101,10 +101,9 @@ function ($scope, socket, Auth, User, _, $timeout) {
   };
 
   var sendSignalChannelMessage = function(message) {
-    // message.sender = id;
+    message.sender = $scope.getCurrentUser()._id;
+
     socket.socket.emit('signal', message);
-    // console.log('sendSignalChannelMessage');
-    // database.child('messages').child(remote).push(message);
   };
 
   /**

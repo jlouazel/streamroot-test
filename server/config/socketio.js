@@ -58,10 +58,10 @@ module.exports = function (socketio) {
 
     socket.broadcast.emit('alive', socket.id, socket.decoded_token._id);
 
-    socket.on('joined', function(userId, channelName) {
-      socket.join(channelName);
-      socket.broadcast.emit('joined', userId, channelName);
-    });
+    // socket.on('joined', function(userId, channelName) {
+    //   socket.join(channelName);
+    //   socket.broadcast.emit('joined', userId, channelName);
+    // });
 
     /**
     * //WEBRTC Stuff

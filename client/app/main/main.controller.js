@@ -41,8 +41,6 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   var handleDataChannelMessage = function(event) {
     var message = JSON.parse(event.data);
     message.timeStamp = event.timeStamp;
-
-    console.log(message);
   };
 
   socket.socket.on('joined', function(userId, channelName) {
@@ -53,6 +51,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
 
         var picture = $scope.users[i].picture || 'assets/images/no_photo.png';
 
+
         toastr.info('<img src="'+ picture + '"' +
         ' alt="" style="margin-left: -40px; margin-right: 10px;border-radius: 50%;width: 45px;float: left;">' +
         '<p style="color: #5f7676;"><b>' + $scope.users[i].name + '</b></br>is now connected.</p>', {
@@ -60,13 +59,18 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
           allowHtml: true
         });
 
+        $scope.nbConnectedUsers++;
+
+        console.log('USER:', $scope.users[i].name)
+
         $scope.rooms.push({
+          visible: false,
           id: channelName,
           show: false,
           name: $scope.users[i].name,
-          messages: []
+          messages: [],
+          picture: $scope.users[i].picture
         });
-
       }
     }
 
@@ -131,6 +135,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
 
   var handleICEConnectionStateChange = function() {
     if (peerConnection.iceConnectionState == 'disconnected') {
+
       console.log('Client disconnected!');
       socket.socket.emit('ready', $scope.getCurrentUser()._id);
     }
@@ -185,12 +190,14 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   /**
   * //WEBRTC Stuff
   */
+  $scope.currentRoom = null;
+
+  $scope.select = function(room) {
+    $scope.currentRoom = room;
+  };
 
 
-
-
-
-  $scope.numConnectedUsers = 0;
+  $scope.nbConnectedUsers = 0;
 
   $scope.query = '';
 
@@ -202,150 +209,10 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     });
   });
 
-  $scope.showRoom = function(roomId) {
-    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
-      if ($scope.rooms[i].id = roomId) {
-        $scope.rooms[i].show = true;
-        $scope.currentRoomIndex = 0;
-        break;
-      }
-    }
+  $scope.showRoom = function(room) {
+    room.visible = true;
   };
 
-  // $scope.clientId = null;
-  //
-  // $scope.inAddition = false;
-  //
-  // $scope.message = '';
-  //
-  // /*
-  // * Set the user as connected when his socket connects to the application
-  // */
-  // socket.socket.on('alive', function(clientId, userId) {
-  //   var user = _.find($scope.users, {'_id': userId});
-  //   if (user) {
-  //     user.connected = true;
-  //     $scope.numConnectedUsers++;
-  //   }
-  // });
-  //
-  // /*
-  // *
-  // */
-  // socket.socket.on('dead', function(socketid, userId) {
-  //   var user =  _.find($scope.users, {'_id': userId});
-  //   if (user) {
-  //     user.connected = false;
-  //     $scope.numConnectedUsers--;
-  //   }
-  // });
-  //
-  // socket.socket.on('created', function (room) {
-  //   updateRoomName(room);
-  //   $scope.rooms.push(room);
-  //   $scope.currentRoomIndex = $scope.rooms.length - 1;
-  // });
-  //
-  // socket.socket.on('joined', function (room) {
-  //   updateRoomName(room);
-  //   $scope.rooms.push(room);
-  //   $scope.currentRoomIndex = $scope.rooms.length - 1;
-  // });
-  //
-  // socket.socket.on('ban', function(room) {
-  //   $scope.rooms.splice(room);
-  //   $scope.currentRoomIndex = $scope.rooms.length - 1;
-  // });
-  //
-  // socket.socket.on('leave', function(user, room) {
-  //   var _room = _.find($scope.rooms, {'id': room.id});
-  //   if (_room) {
-  //     for (var i = 0, len = _room.users.length; i < len; i++) {
-  //       if (_room.users[i] && _room.users[i]._id === user._id) {
-  //         _room.users.splice(i, 1);
-  //       }
-  //     }
-  //     if (_room.users.length === 1) {
-  //       for (var j = 0, len1 = $scope.rooms.length; j < len1; j++) {
-  //         if (_room.id === $scope.rooms[j].id) {
-  //           $scope.rooms.splice(j, 1);
-  //           $scope.currentRoomIndex = $scope.rooms.length - 1;
-  //         }
-  //       }
-  //     }
-  //   }
-  // });
-  //
-  // socket.socket.on('message', function (message, userId, room) {
-  //   if (!message.type) {
-  //     var user = _.find($scope.users, {'_id': userId});
-  //
-  //     if (!_.find($scope.rooms, {'id': room.id})) {
-  //       $scope.rooms.push(room);
-  //       $scope.currentRoomIndex = $scope.rooms.length - 1;
-  //     }
-  //     else if (userId !== $scope.getCurrentUser()._id) {
-  //       $scope.rooms[$scope.currentRoomIndex].messages.push({content: message, sender: user});
-  //       $timeout(function() {
-  //         document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-  //       }, 200);
-  //     }
-  //   }
-  // });
-  //
-  // function isInRoom(room, userId) {
-  //   return !!_.find(room.users, {'_id': userId});
-  // }
-  //
-  // $scope.ban = function(user) {
-  //   socket.socket.emit('ban', user, $scope.rooms[$scope.currentRoomIndex]);
-  // };
-  //
-  // $scope.initRoom = function(user) {
-  //   if (!$scope.inAddition) {
-  //     var room = {
-  //       id: makeid(),
-  //       users: [user, $scope.getCurrentUser()],
-  //       messages: []
-  //     };
-  //
-  //     var index = getRoomIndex(room);
-  //
-  //     //
-  //     if (index === -1) {
-  //       updateRoomName(room);
-  //       $scope.currentRoomIndex = $scope.rooms.length - 1;
-  //
-  //       socket.socket.emit('init', room);
-  //       socket.socket.emit('add', room, user._id);
-  //     } else {
-  //       $scope.currentRoomIndex = index;
-  //     }
-  //   } else {
-  //     var currentRoom = $scope.rooms[$scope.currentRoomIndex];
-  //     if (!isInRoom(currentRoom, user._id)) {
-  //       currentRoom.users.push(user);
-  //       updateRoomName(currentRoom);
-  //       socket.socket.emit('add', currentRoom, user._id);
-  //       $scope.inAddition = false;
-  //     }
-  //   }
-  // };
-  //
-  // $scope.additionActivation = function() {
-  //   var currentRoom = $scope.rooms[$scope.currentRoomIndex];
-  //
-  //   if (currentRoom.users.length < 5) {
-  //     $scope.inAddition = !$scope.inAddition;
-  //   } else {
-  //     // TODO: Print that the room is full
-  //   }
-  // };
-  // /**
-  // * Send message to signaling server
-  // */
-  //
-  //
   $scope.sendMessage = function() {
     dataChannel.send(JSON.stringify({
       type: 'message',
@@ -358,73 +225,6 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
       body: $scope.message,
       timeStamp: Date.now()
     });
-
-    // if ($scope.message) {
-    //   // $scope.roomsRTC[$scope.currentRoomIndex].sendToAll('message', {data: 'some text'});
-    //
-    //   var currentRoom = $scope.rooms[$scope.currentRoomIndex];
-    //
-    //   currentRoom.messages.push({
-    //     content: $scope.message,
-    //     sender: $scope.getCurrentUser()
-    //   });
-    //
-    //   if (currentRoom.messages.length === 1) {
-    //     socket.socket.emit('notify', currentRoom, currentRoom.users[0]._id);
-    //   }
-    //
-    //   socket.socket.emit('message', $scope.message, $scope.rooms[$scope.currentRoomIndex]);
-    //
-    //   $timeout(function() {
-    //     document.getElementById('chat').scrollTop = document.getElementById('chat').scrollHeight;
-    //   }, 200);
-    //
-    //   $scope.message = '';
-    //
-    // }
   };
-  //
-  // if (location.hostname.match(/localhost|127\.0\.0/)) {
-  //   socket.socket.emit('ipaddr');
-  // }
-  //
-  // function updateRoomName(room) {
-  //   room.name = '';
-  //   for (var i = 0, len = room.users.length; i < len; i++) {
-  //     if (room.users[i]._id !== $scope.getCurrentUser()._id) {
-  //       room.name += room.users[i].name;
-  //     }
-  //   }
-  //   if (room.name.length > 37) {
-  //     room.name.trunc(37);
-  //   }
-  // }
-  //
-  // function getRoomIndex(room) {
-  //   for (var i = 0, len = $scope.rooms.length; i < len; i++) {
-  //     if ($scope.rooms[i].users.length === room.users.length) {
-  //       var onlyInA = $scope.rooms[i].users.filter(function(current){
-  //         return room.users.filter(function(currentB) {
-  //           return currentB._id === current._id;
-  //         }).length === 0;
-  //       });
-  //
-  //       var onlyInB = room.users.filter(function(current){
-  //         return $scope.rooms[i].users.filter(function(currentA){
-  //           return currentA._id === current._id;
-  //         }).length === 0;
-  //       });
-  //
-  //       if (!onlyInA.concat(onlyInB).length) {
-  //         return i;
-  //       }
-  //     }
-  //   }
-  //   return -1;
-  // }
-  //
-  // $scope.select = function(index) {
-  //   $scope.currentRoomIndex = index;
-  // };
 
 }]);

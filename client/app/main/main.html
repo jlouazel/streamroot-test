@@ -22,12 +22,12 @@
       <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a>
       <ul class="dropdown-menu"></ul>
     </li>
-    <li ng-class="{'active': $index === currentRoomIndex}" ng-repeat="room in rooms" ng-click="select($index)">
-      <a ng-show="room.show" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
+    <li ng-class="{'active': room.id === currentRoom.id}" ng-repeat="room in rooms" ng-click="select(room)">
+      <a ng-show="room.visible" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
     </li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
-    <div class="chat-message" ng-class="{'me': message.sender._id === getCurrentUser()._id, 'chat-primary': message.sender._id !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">
+    <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">
       <div class="chat-contact">
         <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
       </div>
@@ -61,16 +61,16 @@
   <div class="panel">
     <div class="panel-body">
       <ul class="chat-users m0">
-        <h4>Online<small>({{ numConnectedUsers }})</small></h4>
+        <h4>Online<small>({{ nbConnectedUsers }})</small></h4>
         <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
-        <li style="margin-top: 10px;" data-stats="online" ng-repeat="user in users | filter:query" ng-show="user.connected" ng-click="showRoom(user.roomId)">
+        <li style="margin-top: 10px;" data-stats="online" ng-repeat="room in rooms | filter:query" ng-click="showRoom(room)">
           <a href="javascript:;">
-            <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
-            <span>{{ user.name }}</span>
+            <img ng-src="{{ room.picture || 'assets/images/no_photo.png'}}" alt="">
+            <span>{{ room.name }}</span>
           </a>
         </li>
         <hr class="outsider">
-        <h4>All Contacts<small> ({{ users.length - numConnectedUsers }})</small></h4>
+        <h4>All Contacts<small> ({{ users.length - nbConnectedUsers }})</small></h4>
         <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
           <a href="javascript:;">
             <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">

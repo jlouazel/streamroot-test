@@ -27,7 +27,7 @@
       <a ng-show="room.visible" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
     </li>
   </ul>
-  <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
+  <div scroll-glue class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
     <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-repeat="message in currentRoom.messages">
       <div class="chat-contact">
         <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">

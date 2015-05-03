@@ -9,7 +9,8 @@ angular.module('streamrootTestApp', [
   'ui.bootstrap',
   'ngAnimate',
   'toastr',
-  'bernhardposselt.enhancetext'
+  'bernhardposselt.enhancetext',
+  'luegg.directives'
 ])
 .config(function ($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider) {
   $urlRouterProvider

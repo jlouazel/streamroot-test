@@ -41,6 +41,8 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   var handleDataChannelMessage = function(event) {
     var message = JSON.parse(event.data);
     message.timeStamp = event.timeStamp;
+
+    console.log(message.room);
   };
 
   socket.socket.on('joined', function(userId, channelName) {
@@ -211,16 +213,19 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
 
   $scope.showRoom = function(room) {
     room.visible = true;
+    $scope.currentRoom = room;
   };
 
   $scope.sendMessage = function() {
+    console.log($scope.currentRoom.id);
     dataChannel.send(JSON.stringify({
       type: 'message',
       sender: $scope.getCurrentUser()._id,
-      body: $scope.message
+      body: $scope.message,
+      room: $scope.currentRoom.id
     }));
 
-    $scope.rooms[$scope.currentRoomIndex].messages.push({
+    $scope.currentRoom.messages.push({
       sender: $scope.getCurrentUser()._id,
       body: $scope.message,
       timeStamp: Date.now()

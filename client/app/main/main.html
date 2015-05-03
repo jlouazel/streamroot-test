@@ -27,7 +27,7 @@
     </li>
   </ul>
   <div class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
-    <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-repeat="message in rooms[currentRoomIndex].messages">
+    <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-repeat="message in currentRoom.messages">
       <div class="chat-contact">
         <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
       </div>
@@ -49,10 +49,10 @@
   </div>
   <form ng-submit="sendMessage()">
     <div class="input-group">
-      <input ng-disabled="currentRoomIndex === -1" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
+      <input ng-disabled="!currentRoom" type="text" focus-on-change="message" placeholder="Enter your message here" ng-model="message" class="form-control">
       <span class="input-group-btn">
-        <button ng-disabled="currentRoomIndex === -1" type="button" ng-click="additionActivation()" ng-class="{'btn-inverse': inAddition, 'btn-default': !inAddtion }" class="btn"><i class="fa fa-plus"></i></button>
-        <button ng-disabled="currentRoomIndex === -1" type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
+        <button ng-disabled="!currentRoom" type="button" ng-click="additionActivation()" ng-class="{'btn-inverse': inAddition, 'btn-default': !inAddtion }" class="btn"><i class="fa fa-plus"></i></button>
+        <button ng-disabled="!currentRoom" type="submit" class="btn btn-default"><i class="fa fa-arrow-right"></i></button>
       </span>
     </div>
   </form>

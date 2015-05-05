@@ -2,7 +2,7 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.factory('socket', function(socketFactory, Auth) {
+.factory('socket', function(socketFactory, Auth, Peer) {
 
   // socket.io now auto-configures its connection when we ommit a connection url
   var ioSocket = io('', {
@@ -17,6 +17,20 @@ angular.module('streamrootTestApp')
 
   return {
     socket: socket,
+
+    listenToWebRTC: function() {
+
+      // socket.on('signal', Peer.onSignalReceived);
+      // function(message) {
+      //   var user = getUserById(message.sender);
+      //
+      //   if (message.type == 'offer') { handleOfferSignal(message, user);}
+      //   else if (message.type == 'answer') {handleAnswerSignal(message, user);}
+      //   else if (message.type == 'candidate' && user.running) {handleCandidateSignal(message, user);}
+      // });
+
+      console.log('listenToWebRTC');
+    },
 
     /**
     * Register listeners to sync an array with updates on a model

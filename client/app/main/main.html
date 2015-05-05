@@ -23,7 +23,7 @@
       <a class="dropdown-toggle" data-toggle="dropdown" href="#"><i class="fa fa-angle-down"></i> </a>
       <ul class="dropdown-menu"></ul>
     </li>
-    <li ng-class="{'active': room.id === currentRoom.id}" ng-repeat="room in rooms" ng-click="select(room)">
+    <li ng-class="{'active': room.id === currentRoom.id}" ng-repeat="room in getRooms()" ng-click="select(room.id)">
       <a ng-show="room.visible" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
     </li>
   </ul>

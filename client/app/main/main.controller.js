@@ -11,9 +11,13 @@ function makeid() {
 }
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', ['$scope', 'socket', 'Auth', 'User', '_', '$timeout', 'toastr',
-function ($scope, socket, Auth, User, _, $timeout, toastr) {
+.controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout, toastr, Room, Peer) {
+
+  socket.listenToWebRTC();
+
   $scope.getCurrentUser = Auth.getCurrentUser;
+
+  $scope.rooms = Room._rooms;
 
 
   socket.socket.on('signal', function(message) {
@@ -40,12 +44,12 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   * Return the room which matches the room id passed as parameter.
   * @param {String} roomId
   */
-  function getRoomById(roomId) {
-    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
-      if ($scope.rooms[i].id === roomId) return $scope.rooms[i];
-    }
-    return null;
-  }
+  // function getRoomById(roomId) {
+  //   for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+  //     if ($scope.rooms[i].id === roomId) return $scope.rooms[i];
+  //   }
+  //   return null;
+  // }
 
   var initiateWebRTCState = function(user) {
     user.peerConnection = new webkitRTCPeerConnection(servers);
@@ -57,7 +61,8 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
         type: 'command',
         from: 'room',
         sender: $scope.getCurrentUser()._id,
-        name: 'connect'
+        name: 'connect',
+        src: [user._id]
       }));
     };
 
@@ -116,7 +121,6 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   /**
   * WEBRTC Stuff
   */
-  $scope.rooms = [];
 
   var dataChannelName = makeid();
 
@@ -135,20 +139,27 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
 
   var treatCommands = function(message, user) {
     if (message.name === 'connect') {
+      console.log(message);
+
       var sender = getUserById(message.sender);
 
       if (sender) {
         sender.connected = true;
 
-        $scope.rooms.push({
-          users: [user],
-          visible: false,
-          id: sender._id,
-          show: false,
-          name: sender.name,
-          messages: [],
-          picture: sender.picture
-        });
+        var roomId = Room.create().id;
+        Room.addUser(roomId, sender._id);
+        Room.setVisible(roomId, true);
+
+        //
+        // $scope.rooms.push({
+        //   users: [user],
+        //   visible: false,
+        //   id: sender._id,
+        //   show: false,
+        //   name: sender.name,
+        //   messages: [],
+        //   picture: sender.picture
+        // });
 
         $scope.$apply();
       }
@@ -221,8 +232,9 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   */
   $scope.currentRoom = null;
 
-  $scope.select = function(room) {
-    $scope.currentRoom = room;
+  $scope.select = function(roomId) {
+    $scope.currentRoom = Room.findById(roomId);
+
   };
 
 
@@ -264,4 +276,4 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   $timeout(function() {
     socket.socket.emit('init', $scope.getCurrentUser()._id);
   });
-}]);
+});

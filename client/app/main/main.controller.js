@@ -13,6 +13,10 @@ function makeid() {
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout, toastr, Room, Peer) {
 
+  $scope.peers = Peer.getPeers(function(peers) { $scope.peers = peers });
+
+
+
   socket.listenToWebRTC();
 
   $scope.getCurrentUser = Auth.getCurrentUser;

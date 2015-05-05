@@ -35,7 +35,7 @@
       <div class="chat-text">
         <small ng-if="message.sender._id !== getCurrentUser()._id" style="font-size: 0.8em;">{{ ::message.sender.name }}</small>
         <small ng-if="message.sender === getCurrentUser()._id" style="font-size: 0.8em;">You</small>
-        <small style="font-size: 0.8em;float:right;">{{ ::message.timeStamp | date:"dd/MM/yyyy 'at' h:mma" }}</small>
+        <small style="font-size: 0.8em;float:right;">{{ ::message.timeStamp | date:"dd/MM/yyyy 'at' h:mm:ss" }}</small>
         <br/>
         <div ng-bind-html="message.body | enhanceText"></div>
       </div>

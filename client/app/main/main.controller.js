@@ -15,15 +15,108 @@ angular.module('streamrootTestApp')
 function ($scope, socket, Auth, User, _, $timeout, toastr) {
   $scope.getCurrentUser = Auth.getCurrentUser;
 
-  $scope.rooms = [];
+
+  socket.socket.on('signal', function(message) {
+    var user = getUserById(message.sender);
+
+    if (message.type == 'offer') { handleOfferSignal(message, user);}
+    else if (message.type == 'answer') {handleAnswerSignal(message, user);}
+    else if (message.type == 'candidate' && user.running) {handleCandidateSignal(message, user);}
+  });
+
+
+  /**
+  * Return the user which matches the id passed as parameter.
+  * @param {String} userId
+  */
+  function getUserById(userId) {
+    for (var i = 0, len = $scope.users.length; i < len; i++) {
+      if ($scope.users[i]._id === userId) return $scope.users[i];
+    }
+    return null;
+  }
+
+  /**
+  * Return the room which matches the room id passed as parameter.
+  * @param {String} roomId
+  */
+  function getRoomById(roomId) {
+    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
+      if ($scope.rooms[i].id === roomId) return $scope.rooms[i];
+    }
+    return null;
+  }
+
+  var initiateWebRTCState = function(user) {
+    user.peerConnection = new webkitRTCPeerConnection(servers);
+    user.peerConnection.ondatachannel = handleDataChannel;
+    user.dataChannel = user.peerConnection.createDataChannel(dataChannelName);
+    user.dataChannel.onmessage = handleDataChannelMessage;
+    user.dataChannel.onopen = function() {
+      user.dataChannel.send(JSON.stringify({
+        type: 'command',
+        from: 'room',
+        sender: $scope.getCurrentUser()._id,
+        name: 'connect'
+      }));
+    };
+
+
+  };
+
+
+
+  socket.socket.on('init', function(userId) {
+    var user = getUserById(userId);
+
+    initiateWebRTCState(user);
+
+    // Start sending candidates
+    user.peerConnection.oniceconnectionstatechange = function() {
+      if (user.peerConnection.iceConnectionState == 'disconnected') {}
+    };
+    user.peerConnection.onicecandidate = handleICECandidate;
+
+    user.peerConnection.createOffer(function(sessionDescription) {
+      // console.log('Sending offer to ' + userId);
+      user.peerConnection.setLocalDescription(sessionDescription);
+      sendSignalChannelMessage(sessionDescription);
+    });
+  });
+
+  var handleDataChannelClosed = function() {
+    // console.log('The data channel has been closed!');
+  };
+
+  var handleAnswerSignal = function(message, user) {
+    user.peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+  };
+
+  var handleCandidateSignal = function(message, user) {
+    user.peerConnection.addIceCandidate(new RTCIceCandidate(message));
+  };
+
+
+
+  var handleSignalChannelMessage = function(message) {
+  };
+
+  var handleOfferSignal = function(message, user) {
+    user.running = true;
+    initiateWebRTCState(user);
+    // startSendingCandidates();
+    user.peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+    user.peerConnection.createAnswer(function(sessionDescription) {
+      // console.log('Sending answer to ' + message.sender);
+      user.peerConnection.setLocalDescription(sessionDescription);
+      sendSignalChannelMessage(sessionDescription);
+    });
+  };
 
   /**
   * WEBRTC Stuff
   */
-  var running = false,
-  peerConnection,
-  dataChannel;
-
+  $scope.rooms = [];
 
   var dataChannelName = makeid();
 
@@ -34,25 +127,13 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     }]
   };
 
-  function getUserById(userId) {
-    for (var i = 0, len = $scope.users.length; i < len; i++) {
-      if ($scope.users[i]._id === userId) return $scope.users[i];
-    }
-    return null;
-  }
 
-  function getRoomById(roomId) {
-    for (var i = 0, len = $scope.rooms.length; i < len; i++) {
-      if ($scope.rooms[i].id === roomId) return $scope.rooms[i];
-    }
-    return null;
-  }
 
   var handleDataChannel = function(event) {
     event.channel.onmessage = handleDataChannelMessage;
   };
 
-  var treatCommands = function(message) {
+  var treatCommands = function(message, user) {
     if (message.name === 'connect') {
       var sender = getUserById(message.sender);
 
@@ -60,8 +141,8 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
         sender.connected = true;
 
         $scope.rooms.push({
+          users: [user],
           visible: false,
-          dataChannel: dataChannel,
           id: sender._id,
           show: false,
           name: sender.name,
@@ -74,7 +155,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     }
   };
 
-  function treatText(message) {
+  function treatText(message, user) {
     if (message.from === 'room') {
       var room = getRoomById(message.sender);
 
@@ -82,7 +163,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
         if (!$scope.currentRoom) $scope.currentRoom = room;
         room.visible = true;
 
-        message.sender = getUserById(message.sender);
+        message.sender = user;
 
         room.messages.push(message);
         $scope.$apply();
@@ -91,11 +172,14 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   }
 
   var handleDataChannelMessage = function(event) {
-    var message = JSON.parse(event.data);
+
+    var message = JSON.parse(event.data),
+    user = getUserById(message.sender);
+
     message.timeStamp = event.timeStamp;
 
-    if (message.type === 'command') treatCommands(message);
-    else if (message.type === 'text') treatText(message);
+    if (message.type === 'command') treatCommands(message, user);
+    else if (message.type === 'text') treatText(message, user);
     // for (var i = 0, len = $scope.rooms.length; i < len; i++) {
     //   console.log($scope.rooms[i], message.room);
     //
@@ -109,119 +193,6 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     // }
   };
 
-  socket.socket.on('joined', function(userId, channelName) {
-    for (var i = 0, len = $scope.users.length; i < len; i++) {
-      if ($scope.users[i]._id === userId) {
-        $scope.users[i].connected = true;
-        $scope.users[i].roomId = channelName;
-
-        var picture = $scope.users[i].picture || 'assets/images/no_photo.png';
-
-
-        toastr.info('<img src="'+ picture + '"' +
-        ' alt="" style="margin-left: -40px; margin-right: 10px;border-radius: 50%;width: 45px;float: left;">' +
-        '<p style="color: #5f7676;"><b>' + $scope.users[i].name + '</b></br>is now connected.</p>', {
-          iconClass: 'toast-default',
-          allowHtml: true
-        });
-
-        $scope.nbConnectedUsers++;
-
-        // console.log('ROOMID:',channelName);
-        $scope.rooms.push({
-          visible: false,
-          id: channelName,
-          show: false,
-          name: $scope.users[i].name,
-          messages: [],
-          picture: $scope.users[i].picture
-        });
-      }
-    }
-
-    // console.log($scope.rooms);
-  });
-
-  // This is called when the WebRTC sending data channel is offically 'open'
-  var handleDataChannelOpen = function(e) {
-    // socket.socket.emit('joined', $scope.getCurrentUser()._id, dataChannelName);
-
-    // console.log(e);
-    //
-    // e.currentTarget.send('PLOP');
-    // e.srcElement.send('PLOP');
-    dataChannel.send(JSON.stringify({
-      type: 'command',
-      from: 'room',
-      sender: $scope.getCurrentUser()._id,
-      name: 'connect'
-    }));
-  };
-
-  // Called when the data channel has closed
-  var handleDataChannelClosed = function() {
-    // console.log('The data channel has been closed!');
-  };
-
-  var handleAnswerSignal = function(message) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
-  };
-
-  var handleCandidateSignal = function(message) {
-    var candidate = new RTCIceCandidate(message);
-    peerConnection.addIceCandidate(candidate);
-  };
-
-
-  var initiateWebRTCState = function() {
-    peerConnection = new webkitRTCPeerConnection(servers);
-    peerConnection.ondatachannel = handleDataChannel;
-    dataChannel = peerConnection.createDataChannel(dataChannelName);
-    dataChannel.onmessage = handleDataChannelMessage;
-    dataChannel.onopen = handleDataChannelOpen;
-  };
-
-  // Annouce arrival
-  socket.socket.emit('init', $scope.getCurrentUser()._id);
-
-  socket.socket.on('init', function(userId) {
-    initiateWebRTCState();
-
-    startSendingCandidates();
-    peerConnection.createOffer(function(sessionDescription) {
-      // console.log('Sending offer to ' + userId);
-      peerConnection.setLocalDescription(sessionDescription);
-      sendSignalChannelMessage(sessionDescription);
-    });
-
-  });
-
-  var startSendingCandidates = function() {
-    peerConnection.oniceconnectionstatechange = handleICEConnectionStateChange;
-    peerConnection.onicecandidate = handleICECandidate;
-  };
-
-  var handleICEConnectionStateChange = function() {
-    if (peerConnection.iceConnectionState == 'disconnected') {
-
-      // console.log('Client disconnected!');
-      socket.socket.emit('ready', $scope.getCurrentUser()._id);
-    }
-  };
-
-  socket.socket.on('signal', function(message) {
-    handleSignalChannelMessage(message);
-  });
-
-
-  var handleSignalChannelMessage = function(message) {
-    var sender = message.sender;
-    var type = message.type;
-    // console.log('Recieved a \'' + type + '\' signal from ' + sender);
-    if (type == 'offer') handleOfferSignal(message);
-    else if (type == 'answer') handleAnswerSignal(message);
-    else if (type == 'candidate' && running) handleCandidateSignal(message);
-  };
 
   // Handle ICE Candidate events by sending them to our remote
   // Send the ICE Candidates via the signal channel
@@ -236,17 +207,7 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
     }
   };
 
-  var handleOfferSignal = function(message) {
-    running = true;
-    initiateWebRTCState();
-    startSendingCandidates();
-    peerConnection.setRemoteDescription(new RTCSessionDescription(message));
-    peerConnection.createAnswer(function(sessionDescription) {
-      // console.log('Sending answer to ' + message.sender);
-      peerConnection.setLocalDescription(sessionDescription);
-      sendSignalChannelMessage(sessionDescription);
-    });
-  };
+
 
 
   var sendSignalChannelMessage = function(message) {
@@ -283,21 +244,24 @@ function ($scope, socket, Auth, User, _, $timeout, toastr) {
   };
 
   $scope.sendMessage = function() {
-    $scope.currentRoom.dataChannel.send(JSON.stringify({
+    var message = {
       type: 'text',
       from: 'room',
       sender: $scope.getCurrentUser()._id,
       body: $scope.message,
-      room: $scope.currentRoom.id
-    }));
-
-    $scope.currentRoom.messages.push({
-      sender: $scope.getCurrentUser()._id,
-      body: $scope.message,
+      room: $scope.currentRoom.id,
       timeStamp: Date.now()
-    });
+    };
 
+    for (var i = 0, len = $scope.currentRoom.users.length; i < len; i++) {
+      $scope.currentRoom.users[i].dataChannel.send(JSON.stringify(message));
+    }
+
+    $scope.currentRoom.messages.push(message);
     $scope.message = '';
   };
 
+  $timeout(function() {
+    socket.socket.emit('init', $scope.getCurrentUser()._id);
+  });
 }]);

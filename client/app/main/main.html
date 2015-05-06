@@ -62,20 +62,20 @@
   <div class="panel">
     <div class="panel-body">
       <ul class="chat-users m0">
-        <h4>Online<small>({{ rooms.length }})</small></h4>
+        <h4>Online<small>({{ getConnectedPeers().length }})</small></h4>
         <input type="text" placeholder="Search" ng-model="query" class="input-sm form-control">
-        <li style="margin-top: 10px;" data-stats="online" ng-repeat="room in rooms | filter:query" ng-click="showRoom(room)">
+        <li style="margin-top: 10px;" data-stats="online" ng-repeat="peer in getConnectedPeers() | filter:query" ng-click="showRoom(room)">
           <a href="#">
-            <img ng-src="{{ room.picture || 'assets/images/no_photo.png'}}" alt="">
-            <span>{{ room.name }}</span>
+            <img ng-src="{{ peer.picture || 'assets/images/no_photo.png'}}" alt="">
+            <span>{{ peer.name }}</span>
           </a>
         </li>
         <hr class="outsider">
-        <h4>All Contacts<small> ({{ users.length - rooms.length }})</small></h4>
-        <li data-stats="offline" ng-repeat="user in users" ng-show="!user.connected">
+        <h4>All Contacts<small> ({{ peers.length }})</small></h4>
+        <li data-stats="offline" ng-repeat="peer in peers" ng-show="!peer.connected">
           <a href="#">
-            <img ng-src="{{ user.picture || 'assets/images/no_photo.png'}}" alt="">
-            <span>{{ user.name }}</span>
+            <img ng-src="{{ peer.picture || 'assets/images/no_photo.png'}}" alt="">
+            <span>{{ peer.name }}</span>
           </a>
         </li>
       </ul>

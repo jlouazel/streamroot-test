@@ -7,6 +7,15 @@ angular.module('streamrootTestApp')
   getCurrentUser = Auth.getCurrentUser,
   connectedUsersCount = 0;
 
+  $rootScope.$on('logout', function() {
+    for (var i = 0, len = peers.length; i < len; i++) {
+      if (peers[i].connected === true  && peers[i].dataChannel) {
+        peers[i].dataChannel.close();
+      }
+    }
+  });
+
+
   return {
     getAll: function(cb) {
       if (!peers || !peers.hasOwnProperty('$promise')) {
@@ -28,17 +37,17 @@ angular.module('streamrootTestApp')
     },
 
     setConnected: function(peer, value) {
-        if (peer) {
-          peer.connected = !!value;
-          peer.checking = false;
+      if (peer) {
+        peer.connected = !!value;
+        peer.checking = false;
 
-          if (!!value == true) {
-            connectedUsersCount++;
-          } else {
-            connectedUsersCount--;
-          }
-          $rootScope.$broadcast('update');
+        if (value === true) {
+          connectedUsersCount++;
+        } else {
+          connectedUsersCount--;
         }
+        $rootScope.$broadcast('update');
+      }
     },
 
     getById: function(peerId) {
@@ -64,9 +73,14 @@ angular.module('streamrootTestApp')
     send: function(peerId, message) {
       var peer = this.getById(peerId);
 
-      if (peer && peer.dataChannel) {
-        peer.dataChannel.send(JSON.stringify(message));
+      if (peer) {
+        if (peer.dataChannel && peer.dataChannel.readyState === 'open') {
+          peer.dataChannel.send(JSON.stringify(message));
+          return null;
+        }
+        return peer.name;
       }
+      return null;
     }
   };
 });

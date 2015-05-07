@@ -31,7 +31,9 @@ angular.module('streamrootTestApp')
     peer.peerConnection = new RTCPeerConnection(servers);
     peer.peerConnection.ondatachannel = handleDataChannel;
     peer.peerConnection.oniceconnectionstatechange = function() {
-      if (peer.peerConnection.iceConnectionState === 'disconnected') {
+      var state = peer.peerConnection.iceConnectionState;
+
+      if (state === 'disconnected') {
         Room.setPeerConnected(peer, false);
       }
     };
@@ -40,6 +42,9 @@ angular.module('streamrootTestApp')
     peer.dataChannel.onmessage = handleDataChannelMessage;
     peer.dataChannel.onopen = function() {
       Room.setPeerConnected(peer, true);
+    };
+    peer.dataChannel.onclose = function() {
+      peer.connected = false;
     };
   }
 

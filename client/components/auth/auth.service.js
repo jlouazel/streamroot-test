@@ -46,6 +46,8 @@ angular.module('streamrootTestApp')
        */
       logout: function() {
         $cookieStore.remove('token');
+        $rootScope.$broadcast('logout');
+
         currentUser = {};
       },
 

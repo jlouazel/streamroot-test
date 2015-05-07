@@ -109,8 +109,13 @@ angular.module('streamrootTestApp')
     },
 
     send: function(room, message) {
+      message.blind = [];
       for (var i = 0, len = room.users.length; i < len; i++) {
-        Peer.send(room.users[i], message);
+        var peerName = Peer.send(room.users[i], message);
+
+        if (peerName) {
+          message.blind.push(peerName);
+        }
       }
       room.messages.push(message);
     },

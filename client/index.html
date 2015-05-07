@@ -71,6 +71,8 @@
   <script src="socket.io-client/socket.io.js"></script>
   <!-- endbuild -->
 
+<script type="text/javascript" src="bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+
   <!-- build:js({.tmp,client}) app/app.js -->
   <script src="app/app.js"></script>
   <!-- injector:js -->
@@ -92,13 +94,5 @@
   <!-- endinjector -->
   <!-- endbuild -->
 
-  <script>
-  $(document).ready(function(){
-    $(this).keypress(function(e){
-      if(e.keyCode == 27)
-      return false;
-    });
-  });
-  </script>
 </body>
 </html>

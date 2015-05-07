@@ -2,6 +2,7 @@
 
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, Room, Peer) {
+
   $scope.peers = [];
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.getRooms = Room.getAll;
@@ -41,6 +42,7 @@ angular.module('streamrootTestApp')
   $scope.selectRoom = function(room) {
     $scope.currentRoom = room;
   };
+
 
   $scope.sendMessage = function() {
     Room.send($scope.currentRoom, {

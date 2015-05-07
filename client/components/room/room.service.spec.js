@@ -1,14 +1,14 @@
 'use strict';
 
-describe('Service: room', function () {
+describe('Service: Room', function () {
 
   // load the service's module
   beforeEach(module('streamrootTestApp'));
 
   // instantiate service
   var room;
-  beforeEach(inject(function (_room_) {
-    room = _room_;
+  beforeEach(inject(function (Room) {
+    room = Room;
   }));
 
   it('should do something', function () {

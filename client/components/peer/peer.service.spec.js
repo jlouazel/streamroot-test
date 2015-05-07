@@ -1,14 +1,14 @@
 'use strict';
 
-describe('Service: peer', function () {
+describe('Service: Peer', function () {
 
   // load the service's module
   beforeEach(module('streamrootTestApp'));
 
   // instantiate service
   var peer;
-  beforeEach(inject(function (_peer_) {
-    peer = _peer_;
+  beforeEach(inject(function (Peer) {
+    peer = Peer;
   }));
 
   it('should do something', function () {

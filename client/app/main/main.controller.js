@@ -11,7 +11,7 @@ function makeid() {
 }
 
 angular.module('streamrootTestApp')
-.controller('MainCtrl', function ($scope, socket, Auth, User, _, $timeout, toastr, Room, Peer) {
+.controller('MainCtrl', function ($scope, socket, Auth, Room, Peer) {
   $scope.peers = [];
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.getRooms = Room.getAll;
@@ -24,7 +24,7 @@ angular.module('streamrootTestApp')
 
   Peer.getAll(function(peers) { $scope.peers = peers; });
 
-  socket.listenToWebRTC($scope);
+  socket.listenToWebRTC();
 
   $scope.$on('update', function() { $scope.$digest(); });
   $scope.$on('room:active', function(e, room) {

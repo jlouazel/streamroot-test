@@ -33,7 +33,9 @@ angular.module('streamrootTestApp')
         for (var i = 0, len = room.users.length; i < len; i++) {
           var peer = Peer.getById(room.users[i]);
 
-          if (peer) peers.push(peer);
+          if (peer) {
+            peers.push(peer);
+          }
         }
       }
       return peers;
@@ -61,8 +63,12 @@ angular.module('streamrootTestApp')
           var matches = 0;
           if (roomUsersLength === peerIdsLength) {
             for (var k = 0; k < peerIdsLength; k++) {
-              if (rooms[i].users[j] === peerIds[k]) matches++;
-              if (matches === peerIdsLength) return rooms[i];
+              if (rooms[i].users[j] === peerIds[k]) {
+                matches++;
+              }
+              if (matches === peerIdsLength) {
+                return rooms[i];
+              }
             }
           }
         }
@@ -72,19 +78,11 @@ angular.module('streamrootTestApp')
 
     findById: function(roomId) {
       for (var i = 0, len = rooms.length; i < len; i++) {
-        if (rooms[i].id === roomId) return rooms[i];
-      }
-      return null;
-    },
-
-    find: function(room) {
-      if (!room || !room.users) return null;
-
-      for (var i = 0, len = rooms.length; i < len; i++) {
-        if (rooms[i].users.length === room.users.length) {
-          console.log('Possible match between', rooms[i], room);
+        if (rooms[i].id === roomId) {
+          return rooms[i];
         }
       }
+      return null;
     },
 
     addUser: function(room, userId) {
@@ -95,11 +93,15 @@ angular.module('streamrootTestApp')
     },
 
     setActive: function(room, value) {
-      if (room) room.active = value
+      if (room) {
+        room.active = value;
+      }
     },
 
     send: function(room, message) {
-      for (var i = 0, len = room.users.length; i < len; i++) Peer.send(room.users[i], message);
+      for (var i = 0, len = room.users.length; i < len; i++) {
+        Peer.send(room.users[i], message);
+      }
       room.messages.push(message);
     },
 
@@ -118,15 +120,21 @@ angular.module('streamrootTestApp')
       users.push(message.sender);
 
       var crtUserIdx = users.indexOf(getCurrentUser()._id);
-      if (crtUserIdx >= -1) users.splice(crtUserIdx, 1);
+      if (crtUserIdx >= -1) {
+        users.splice(crtUserIdx, 1);
+      }
 
       var room = this.findByPeerIds(users);
       if (!room) {
         room = this.create();
-        for (var i = 0, len = users.length; i < len; i++) this.addUser(room, users[i]);
+        for (var i = 0, len = users.length; i < len; i++) {
+          this.addUser(room, users[i]);
+        }
       }
 
-      if (sender) message.sender = sender;
+      if (sender) {
+        message.sender = sender;
+      }
 
       room.messages.push(message);
       this.setActive(room, true);

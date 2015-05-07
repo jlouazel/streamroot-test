@@ -18,7 +18,9 @@ angular.module('streamrootTestApp')
         }).catch(function() {
           cb(null);
         });
-      } else cb(peers);
+      } else {
+        cb(peers);
+      }
     },
 
     getConnectedUsersCount: function() {
@@ -37,12 +39,14 @@ angular.module('streamrootTestApp')
 
     getById: function(peerId) {
       for (var i = 0, len = peers.length; i < len; i++) {
-        if (peers[i]._id === peerId) return peers[i];
+        if (peers[i]._id === peerId) {
+          return peers[i];
+        }
       }
       return null;
     },
 
-    getConnected: function(peer) {
+    getConnected: function() {
       var _peers = [];
       for (var i = 0, len = peers.length; i < len; i++) {
         if (peers[i].connected) {
@@ -56,7 +60,9 @@ angular.module('streamrootTestApp')
     send: function(peerId, message) {
       var peer = this.getById(peerId);
 
-      if (peer && peer.dataChannel) peer.dataChannel.send(JSON.stringify(message));
+      if (peer && peer.dataChannel) {
+        peer.dataChannel.send(JSON.stringify(message));
+      }
     }
   };
 });

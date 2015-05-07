@@ -43,15 +43,15 @@ angular.module('streamrootTestApp')
     };
   }
 
-  function treatMessage(message) {
-    $rootScope.$broadcast('message:new');
-  }
-
   function handleDataChannelMessage(e) {
     var message = JSON.parse(e.data);
 
-    if (message.type === 'text') Room.handleNewMessage(message);
-    else if (message.type === 'connect') Room.setPeerConnected(message.sender);
+    if (message.type === 'text') {
+      Room.handleNewMessage(message);
+    }
+    else if (message.type === 'connect') {
+      Room.setPeerConnected(message.sender);
+    }
   }
 
   function handleDataChannel(e) {
@@ -86,9 +86,15 @@ angular.module('streamrootTestApp')
       var peer = Room.getPeerById(message.sender);
 
       if (peer) {
-        if (message.type === 'offer') handleOfferSignal(message, peer, socket);
-        else if (message.type == 'answer') handleAnswerSignal(message, peer);
-        else if (message.type == 'candidate' && peer.running) handleCandidateSignal(message, peer);
+        if (message.type === 'offer') {
+          handleOfferSignal(message, peer, socket);
+        }
+        else if (message.type === 'answer') {
+          handleAnswerSignal(message, peer);
+        }
+        else if (message.type === 'candidate' && peer.running) {
+          handleCandidateSignal(message, peer);
+        }
       }
     },
 

@@ -19,6 +19,9 @@
   "trailing": true,
   "smarttabs": true,
   "globals": {
+    "RTCPeerConnection": true,
+    "RTCSessionDescription": true,
+    "RTCIceCandidate": true,
     "jQuery": true,
     "angular": true,
     "console": true,

@@ -16,11 +16,6 @@ angular.module('streamrootTestApp')
     ioSocket: ioSocket
   });
 
-
-  // function handleOfferSignal(message, user) {
-
-  // };
-
   return {
     socket: socket,
 
@@ -31,7 +26,7 @@ angular.module('streamrootTestApp')
       if (getCurrentUser().hasOwnProperty('$promise')) {
         getCurrentUser().$promise.then(function(user) {
           socket.emit('init', user._id);
-        })
+        });
       } else {
         socket.emit('init', getCurrentUser()._id);
       }

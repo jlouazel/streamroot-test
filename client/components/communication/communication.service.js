@@ -30,26 +30,24 @@ angular.module('streamrootTestApp')
   function initWebRTC(peer) {
     peer.peerConnection = new RTCPeerConnection(servers);
     peer.peerConnection.ondatachannel = handleDataChannel;
-    peer.peerConnection.oniceconnectionstatechange = function() {};
+    peer.peerConnection.oniceconnectionstatechange = function() {
+      if (peer.peerConnection.iceConnectionState === 'disconnected') {
+        Room.setPeerConnected(message.sender, false);
+      }
+    };
 
     peer.dataChannel = peer.peerConnection.createDataChannel(dataChannelName);
     peer.dataChannel.onmessage = handleDataChannelMessage;
     peer.dataChannel.onopen = function() {
-      peer.dataChannel.send(JSON.stringify({
-        type: 'connect',
-        sender: getCurrentUser()._id
-      }));
+      Room.setPeerConnected(peer._id, true);
     };
   }
 
   function handleDataChannelMessage(e) {
     var message = JSON.parse(e.data);
 
-    if (message.type === 'text') {
+    if (message && message.type === 'text') {
       Room.handleNewMessage(message);
-    }
-    else if (message.type === 'connect') {
-      Room.setPeerConnected(message.sender);
     }
   }
 
@@ -101,6 +99,7 @@ angular.module('streamrootTestApp')
       var peer = Room.getPeerById(peerId);
 
       if (peer) {
+        peer.checking = true;
         initWebRTC(peer);
 
         peer.peerConnection.onicecandidate = function(e) {

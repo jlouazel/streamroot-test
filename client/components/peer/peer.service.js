@@ -27,10 +27,11 @@ angular.module('streamrootTestApp')
       return connectedUsersCount;
     },
 
-    setConnected: function(peerId) {
+    setConnected: function(peerId, value) {
       for (var i = 0, len = peers.length; i < len; i++) {
         if (peers[i]._id === peerId) {
-          peers[i].connected = true;
+          peers[i].connected = !!value;
+          peers[i].checking = false;
           connectedUsersCount++;
           $rootScope.$broadcast('update');
         }

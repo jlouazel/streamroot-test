@@ -33,7 +33,9 @@ angular.module('streamrootTestApp')
     }
 
     Room.setActive(room, true);
-    $scope.currentRoom = room;
+    if (!$scope.currentRoom) {
+      $scope.currentRoom = room;
+    }
   };
 
   $scope.selectRoom = function(room) {

@@ -42,10 +42,6 @@ module.exports = function (socketio) {
 
     socket.connectedAt = new Date();
 
-    /**
-    * WEBRTC Stuff
-    */
-
     socket.on('init', function(userId) {
       console.log(userId, 'is connected');
       socket.broadcast.emit('init', userId);
@@ -55,14 +51,6 @@ module.exports = function (socketio) {
       socket.broadcast.emit('signal', message);
     });
 
-    /**
-    * //WEBRTC Stuff
-    */
-
-
-
-
-
     // Call onDisconnect.
     socket.on('disconnect', function () {
       socketio.emit('dead', socket.id, socket.decoded_token._id);
@@ -70,36 +58,5 @@ module.exports = function (socketio) {
     });
 
     onConnect(socket);
-
-    socket.on('add', function(room, userId) {
-      var sockets = socketio.sockets.sockets;
-
-      for (var i = 0, len = sockets.length; i < len; i++) {
-        if (sockets[i].decoded_token._id === userId) {
-          sockets[i].join(room.id);
-          sockets[i].emit('joined', room);
-        }
-      }
-    });
-
-    socket.on('message', function (message, room) {
-      socketio.sockets.in(room.id).emit('message', message, socket.decoded_token._id, room);
-    });
-
-
-    socket.on('ban', function(user, room) {
-      var sockets = socketio.sockets.sockets;
-      for (var i = 0, len = sockets.length; i < len; i++) {
-        if (sockets[i].decoded_token._id === user._id) {
-          sockets[i].leave(room.id);
-          sockets[i].emit('ban', room);
-        }
-      }
-
-      socketio.sockets.in(room.id).emit('leave', user, room);
-      if (socketio.sockets.in(room.id).length === 2) {
-        socket.leave(room.id);
-      }
-    });
   });
 };

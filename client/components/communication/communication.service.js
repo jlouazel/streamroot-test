@@ -20,7 +20,7 @@ angular.module('streamrootTestApp')
     }]
   };
 
-  var dataChannelName = 'plop';
+  var dataChannelName = makeid();
 
   function sendSignalChannelMessage(message, socket) {
     message.sender = getCurrentUser()._id;
@@ -28,13 +28,14 @@ angular.module('streamrootTestApp')
   }
 
   function initWebRTC(peer) {
-    peer.peerConnection = new webkitRTCPeerConnection(servers);
+    peer.peerConnection = new RTCPeerConnection(servers);
     peer.peerConnection.ondatachannel = handleDataChannel;
     peer.peerConnection.oniceconnectionstatechange = function() {};
 
     peer.dataChannel = peer.peerConnection.createDataChannel(dataChannelName);
     peer.dataChannel.onmessage = handleDataChannelMessage;
     peer.dataChannel.onopen = function() {
+      console.log(peer);
       peer.dataChannel.send(JSON.stringify({
         type: 'connect',
         sender: getCurrentUser()._id

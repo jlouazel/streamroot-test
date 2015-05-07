@@ -91,5 +91,14 @@
   <script src="components/socket/socket.service.js"></script>
   <!-- endinjector -->
   <!-- endbuild -->
+
+  <script>
+  $(document).ready(function(){
+    $(this).keypress(function(e){
+      if(e.keyCode == 27)
+      return false;
+    });
+  });
+  </script>
 </body>
 </html>

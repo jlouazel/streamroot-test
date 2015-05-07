@@ -26,7 +26,7 @@ angular.module('streamrootTestApp')
 
     listenToWebRTC: function() {
       socket.on('init', function(peerId) { Communication.handleInitStart(peerId, socket); });
-      socket.on('signal', function(message) { Communication.handleSignalReception(message, socket); });
+      socket.on('signal', function(message) { console.log(message.sender); Communication.handleSignalReception(message, socket); });
 
       if (getCurrentUser().hasOwnProperty('$promise')) {
         getCurrentUser().$promise.then(function(user) {

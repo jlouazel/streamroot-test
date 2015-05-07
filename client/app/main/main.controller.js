@@ -28,8 +28,6 @@ angular.module('streamrootTestApp')
 
   $scope.$on('update', function() { $scope.$digest(); });
   $scope.$on('room:active', function(e, room) {
-    console.log(room);
-
     $scope.currentRoom = room;
     $scope.$apply();
   });

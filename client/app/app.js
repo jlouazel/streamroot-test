@@ -7,7 +7,10 @@ angular.module('streamrootTestApp', [
   'btford.socket-io',
   'ui.router',
   'ui.bootstrap',
-  'bernhardposselt.enhancetext'
+  'ngAnimate',
+  'toastr',
+  'bernhardposselt.enhancetext',
+  'luegg.directives'
 ])
 .config(function ($stateProvider, $urlRouterProvider, $locationProvider, $httpProvider) {
   $urlRouterProvider
@@ -17,7 +20,12 @@ angular.module('streamrootTestApp', [
   $httpProvider.interceptors.push('authInterceptor');
 })
 
-.config(function(enhanceTextFilterProvider) {
+.config(function(enhanceTextFilterProvider, toastrConfig) {
+  angular.extend(toastrConfig, {
+    titleClass: '.toast-title',
+    positionClass: 'toast-bottom-right',
+  });
+
   enhanceTextFilterProvider.setOptions({
     cache: true,  // stores replaced text so angular update does not slow down
     // newLineToBr: true,  // replaces \n with <br/>
@@ -44,7 +52,7 @@ angular.module('streamrootTestApp', [
       ':|': 'assets/images/emoticons/Neutral2.png',
       ':o': 'assets/images/emoticons/Shocked2.png',
       '3:)': 'assets/images/emoticons/Evil2.png'
-  }
+    }
   });
 })
 .factory('authInterceptor', function ($rootScope, $q, $cookieStore, $location) {

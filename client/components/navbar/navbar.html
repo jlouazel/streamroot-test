@@ -7,7 +7,7 @@
     </div>
     <div>
       <ul class="nav navbar-nav navbar-right">
-        <li><p class="navbar-text">Hello {{ ::getCurrentUser().name }}</p> </li>
+        <li><p class="navbar-text">Hello {{ ::getCurrentUser().name }} <img ng-src="{{ getCurrentUser().picture || 'assets/images/no_photo.png'}}" style="height: 30px;border-radius:50%;margin-left:10px;" alt="{{ ::getCurrentUser().name }}"></p> </li>
         <li ng-if="getCurrentUser().provider === 'local'" ng-class="{active: isActive('/settings')}"><a href="/settings"><span class="fa fa-cog"></span></a></li>
         <li ng-class="{active: isActive('/logout')}"><a href="" ng-click="logout()">Logout</a></li>
       </ul>

@@ -13,6 +13,7 @@
   <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
   <!-- build:css(client) app/vendor.css -->
   <!-- bower:css -->
+  <link rel="stylesheet" href="bower_components/angular-toastr/dist/angular-toastr.css" />
   <!-- endbower -->
   <!-- endbuild -->
   <!-- build:css({.tmp,client}) app/app.css -->
@@ -63,6 +64,9 @@
   <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
   <script src="bower_components/adapterjs/publish/adapter.min.js"></script>
   <script src="bower_components/angular-enhance-text/build/angular-enhance-text.js"></script>
+  <script src="bower_components/angular-toastr/dist/angular-toastr.tpls.js"></script>
+  <script src="bower_components/angular-animate/angular-animate.js"></script>
+  <script src="bower_components/angular-scroll-glue/src/scrollglue.js"></script>
   <!-- endbower -->
   <script src="socket.io-client/socket.io.js"></script>
   <!-- endbuild -->
@@ -78,11 +82,23 @@
   <script src="app/main/main.js"></script>
   <script src="components/auth/auth.service.js"></script>
   <script src="components/auth/user.service.js"></script>
+  <script src="components/communication/communication.service.js"></script>
   <script src="components/modal/modal.service.js"></script>
   <script src="components/mongoose-error/mongoose-error.directive.js"></script>
   <script src="components/navbar/navbar.controller.js"></script>
+  <script src="components/peer/peer.service.js"></script>
+  <script src="components/room/room.service.js"></script>
   <script src="components/socket/socket.service.js"></script>
   <!-- endinjector -->
   <!-- endbuild -->
+
+  <script>
+  $(document).ready(function(){
+    $(this).keypress(function(e){
+      if(e.keyCode == 27)
+      return false;
+    });
+  });
+  </script>
 </body>
 </html>

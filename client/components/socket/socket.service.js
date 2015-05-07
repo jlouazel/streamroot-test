@@ -2,7 +2,8 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.factory('socket', function(socketFactory, Auth) {
+.factory('socket', function(socketFactory, Auth, Peer, $timeout, Communication) {
+  var getCurrentUser = Auth.getCurrentUser;
 
   // socket.io now auto-configures its connection when we ommit a connection url
   var ioSocket = io('', {
@@ -15,8 +16,26 @@ angular.module('streamrootTestApp')
     ioSocket: ioSocket
   });
 
+
+  // function handleOfferSignal(message, user) {
+
+  // };
+
   return {
     socket: socket,
+
+    listenToWebRTC: function() {
+      socket.on('init', function(peerId) { Communication.handleInitStart(peerId, socket); });
+      socket.on('signal', function(message) { console.log(message.sender); Communication.handleSignalReception(message, socket); });
+
+      if (getCurrentUser().hasOwnProperty('$promise')) {
+        getCurrentUser().$promise.then(function(user) {
+          socket.emit('init', user._id);
+        })
+      } else {
+        socket.emit('init', getCurrentUser()._id);
+      }
+    },
 
     /**
     * Register listeners to sync an array with updates on a model

@@ -43,12 +43,17 @@ module.exports = function (socketio) {
     socket.connectedAt = new Date();
 
     socket.on('init', function(userId) {
-      console.log(userId, 'is connected');
       socket.broadcast.emit('init', userId);
     });
 
-    socket.on('signal', function(message) {
-      socket.broadcast.emit('signal', message);
+    socket.on('signal', function(userId, message) {
+      var sockets = socketio.sockets.sockets;
+
+      for (var i = 0, len = sockets.length; i < len; i++) {
+        if (sockets[i].decoded_token._id === userId) {
+          sockets[i].emit('signal', message);
+        }
+      }
     });
 
     // Call onDisconnect.

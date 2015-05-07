@@ -22,9 +22,9 @@ angular.module('streamrootTestApp')
 
   var dataChannelName = makeid();
 
-  function sendSignalChannelMessage(message, socket) {
+  function sendSignalChannelMessage(message, peer, socket) {
     message.sender = getCurrentUser()._id;
-    socket.emit('signal', message);
+    socket.emit('signal', peer._id, message);
   }
 
   function initWebRTC(peer) {
@@ -35,7 +35,6 @@ angular.module('streamrootTestApp')
     peer.dataChannel = peer.peerConnection.createDataChannel(dataChannelName);
     peer.dataChannel.onmessage = handleDataChannelMessage;
     peer.dataChannel.onopen = function() {
-      console.log(peer);
       peer.dataChannel.send(JSON.stringify({
         type: 'connect',
         sender: getCurrentUser()._id
@@ -68,7 +67,7 @@ angular.module('streamrootTestApp')
     peer.peerConnection.setRemoteDescription(new RTCSessionDescription(message));
     peer.peerConnection.createAnswer(function(sessionDescription) {
       peer.peerConnection.setLocalDescription(sessionDescription);
-      sendSignalChannelMessage(sessionDescription, socket);
+      sendSignalChannelMessage(sessionDescription, peer, socket);
     });
   }
 
@@ -109,13 +108,13 @@ angular.module('streamrootTestApp')
 
           if (candidate) {
             candidate.type = 'candidate';
-            sendSignalChannelMessage(candidate, socket);
+            sendSignalChannelMessage(candidate, peer, socket);
           }
         };
 
         peer.peerConnection.createOffer(function(sessionDescription) {
           peer.peerConnection.setLocalDescription(sessionDescription);
-          sendSignalChannelMessage(sessionDescription, socket);
+          sendSignalChannelMessage(sessionDescription, peer, socket);
         });
       }
     }

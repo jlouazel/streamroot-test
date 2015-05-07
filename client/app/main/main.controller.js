@@ -23,7 +23,6 @@ angular.module('streamrootTestApp')
   });
 
   $scope.getRoom = Room.getRoom;
-
   $scope.setRoomActive = function(peerId) {
     var room = Room.findByPeerIds([peerId]);
 

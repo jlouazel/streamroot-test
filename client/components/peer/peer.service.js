@@ -8,9 +8,11 @@ angular.module('streamrootTestApp')
   connectedUsersCount = 0;
 
   $rootScope.$on('logout', function() {
+    console.log('logout');
     for (var i = 0, len = peers.length; i < len; i++) {
       if (peers[i].connected === true  && peers[i].dataChannel) {
         peers[i].dataChannel.close();
+        peers[i].peerConnection.close();
       }
     }
   });

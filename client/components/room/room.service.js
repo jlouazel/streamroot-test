@@ -119,8 +119,8 @@ angular.module('streamrootTestApp')
       return Peer.getById(peerId);
     },
 
-    setPeerConnected: function(peerId, value) {
-      Peer.setConnected(peerId, value);
+    setPeerConnected: function(peer, value) {
+      Peer.setConnected(peer, value);
     },
 
     handleNewMessage: function(message) {

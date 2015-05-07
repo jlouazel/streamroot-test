@@ -32,14 +32,14 @@ angular.module('streamrootTestApp')
     peer.peerConnection.ondatachannel = handleDataChannel;
     peer.peerConnection.oniceconnectionstatechange = function() {
       if (peer.peerConnection.iceConnectionState === 'disconnected') {
-        Room.setPeerConnected(message.sender, false);
+        Room.setPeerConnected(peer, false);
       }
     };
 
     peer.dataChannel = peer.peerConnection.createDataChannel(dataChannelName);
     peer.dataChannel.onmessage = handleDataChannelMessage;
     peer.dataChannel.onopen = function() {
-      Room.setPeerConnected(peer._id, true);
+      Room.setPeerConnected(peer, true);
     };
   }
 

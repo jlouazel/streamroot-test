@@ -38,14 +38,15 @@ angular.module('streamrootTestApp')
 
     setConnected: function(peer, value) {
       if (peer) {
-        peer.connected = !!value;
-        peer.checking = false;
-
-        if (value === true) {
+        if (value === true && !peer.connected) {
           connectedUsersCount++;
-        } else {
+          peer.connected = true;
+        } else if (peer.connected === true && value === false) {
+          peer.connected = false;
           connectedUsersCount--;
         }
+
+        peer.checking = false;
         $rootScope.$broadcast('update');
       }
     },

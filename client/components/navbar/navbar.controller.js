@@ -9,6 +9,7 @@ angular.module('streamrootTestApp')
 
     $scope.logout = function() {
       Auth.logout();
+
       $location.path('/login');
     };
 

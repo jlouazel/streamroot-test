@@ -25,13 +25,16 @@ angular.module('streamrootTestApp')
     socket: socket,
 
     listenToWebRTC: function() {
-      $timeout(function() {
+      socket.on('init', function(peerId) { Communication.handleInitStart(peerId, socket); });
+      socket.on('signal', function(message) { Communication.handleSignalReception(message, socket); });
 
-        socket.on('init', function(peerId) { Communication.handleInitStart(peerId, socket); });
-        socket.on('signal', function(message) { Communication.handleSignalReception(message, socket) });
-
+      if (getCurrentUser().hasOwnProperty('$promise')) {
+        getCurrentUser().$promise.then(function(user) {
+          socket.emit('init', user._id);
+        })
+      } else {
         socket.emit('init', getCurrentUser()._id);
-      })
+      }
     },
 
     /**

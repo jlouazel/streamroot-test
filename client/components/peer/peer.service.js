@@ -1,10 +1,11 @@
 'use strict';
 
 angular.module('streamrootTestApp')
-.factory('Peer', function (Auth, User) {
+.factory('Peer', function ($rootScope, Auth, User) {
 
-  var peers = [];
-  var getCurrentUser = Auth.getCurrentUser;
+  var peers = [],
+  getCurrentUser = Auth.getCurrentUser,
+  connectedUsersCount = 0;
 
   return {
     getAll: function(cb) {
@@ -20,6 +21,20 @@ angular.module('streamrootTestApp')
       } else cb(peers);
     },
 
+    getConnectedUsersCount: function() {
+      return connectedUsersCount;
+    },
+
+    setConnected: function(peerId) {
+      for (var i = 0, len = peers.length; i < len; i++) {
+        if (peers[i]._id === peerId) {
+          peers[i].connected = true;
+          connectedUsersCount++;
+          $rootScope.$broadcast('update');
+        }
+      }
+    },
+
     getById: function(peerId) {
       for (var i = 0, len = peers.length; i < len; i++) {
         if (peers[i]._id === peerId) return peers[i];
@@ -30,10 +45,18 @@ angular.module('streamrootTestApp')
     getConnected: function(peer) {
       var _peers = [];
       for (var i = 0, len = peers.length; i < len; i++) {
-        if (peers[i].connected) _peers.push(peers[i]);
+        if (peers[i].connected) {
+          _peers.push(peers[i]);
+        }
       }
 
       return _peers;
+    },
+
+    send: function(peerId, message) {
+      var peer = this.getById(peerId);
+
+      if (peer && peer.dataChannel) peer.dataChannel.send(JSON.stringify(message));
     }
   };
 });

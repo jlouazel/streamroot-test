@@ -8,7 +8,6 @@ angular.module('streamrootTestApp')
   connectedUsersCount = 0;
 
   $rootScope.$on('logout', function() {
-    console.log('logout');
     for (var i = 0, len = peers.length; i < len; i++) {
       if (peers[i].connected === true  && peers[i].dataChannel) {
         peers[i].dataChannel.close();
@@ -35,17 +34,21 @@ angular.module('streamrootTestApp')
     },
 
     getConnectedUsersCount: function() {
-      return connectedUsersCount;
+      var res = 0;
+      for (var i = 0, len = peers.length; i < len; i++) {
+        if (peers[i].connected) {
+          res++;
+        }
+      }
+      return res;
     },
 
     setConnected: function(peer, value) {
       if (peer) {
-        if (value === true && !peer.connected) {
-          connectedUsersCount++;
+        if (value === true) {
           peer.connected = true;
-        } else if (peer.connected === true && value === false) {
+        } else {
           peer.connected = false;
-          connectedUsersCount--;
         }
 
         peer.checking = false;
@@ -77,7 +80,7 @@ angular.module('streamrootTestApp')
       var peer = this.getById(peerId);
 
       if (peer) {
-        if (peer.dataChannel && peer.dataChannel.readyState === 'open') {
+        if (peer.connected && peer.dataChannel && peer.dataChannel.readyState === 'open') {
           peer.dataChannel.send(JSON.stringify(message));
           return null;
         }

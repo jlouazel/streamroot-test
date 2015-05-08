@@ -45,15 +45,18 @@ angular.module('streamrootTestApp')
 
 
   $scope.sendMessage = function() {
-    Room.send($scope.currentRoom, {
-      type: 'text',
-      sender: $scope.getCurrentUser()._id,
-      users: $scope.currentRoom.users,
-      body: $scope.message,
-      room: $scope.currentRoom.id,
-      timeStamp: Date.now()
-    });
+    if ($scope.message) {
 
-    $scope.message = '';
+      Room.send($scope.currentRoom, {
+        type: 'text',
+        sender: $scope.getCurrentUser()._id,
+        users: $scope.currentRoom.users,
+        body: $scope.message,
+        room: $scope.currentRoom.id,
+        timeStamp: Date.now()
+      });
+
+      $scope.message = '';
+    }
   };
 });

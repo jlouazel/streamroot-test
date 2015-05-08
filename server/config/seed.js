@@ -1,7 +1,7 @@
 /**
- * Populate DB with sample data on server start
- * to disable, edit config/environment/index.js, and set `seedDB: false`
- */
+* Populate DB with sample data on server start
+* to disable, edit config/environment/index.js, and set `seedDB: false`
+*/
 
 'use strict';
 
@@ -19,13 +19,8 @@ User.find({}).remove(function() {
     name: 'Julien Polge',
     email: 'julien.polge@gmail.com',
     password: 'test'
-  }, {
-    provider: 'local',
-    name: 'Alexandre Déceneux',
-    email: 'alexandre.deceneux@gmail.com',
-    password: 'test'
   }, function() {
-      console.log('finished populating users');
-    }
-  );
+    console.log('finished populating users');
+  }
+);
 });

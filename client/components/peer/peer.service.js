@@ -6,9 +6,11 @@ angular.module('streamrootTestApp')
   var peers = [],
   getCurrentUser = Auth.getCurrentUser;
 
+  // Handle `logout` broadcast from Auth.
   $rootScope.$on('logout', function() {
     for (var i = 0, len = peers.length; i < len; i++) {
       if (peers[i].connected === true  && peers[i].dataChannel) {
+        peers[i].connected = false;
         peers[i].dataChannel.close();
         peers[i].peerConnection.close();
       }
@@ -17,6 +19,10 @@ angular.module('streamrootTestApp')
 
 
   return {
+    /**
+     * Get all peers.
+     * @param {Function} cb Callback to call when the $promise is resolved.
+     */
     getAll: function(cb) {
       if (!peers || !peers.hasOwnProperty('$promise')) {
         peers = User.getAll();
@@ -32,6 +38,10 @@ angular.module('streamrootTestApp')
       }
     },
 
+    /**
+     * Get the number of connected peers.
+     * @return {Integer}  Number of connected peers.
+     */
     getConnectedUsersCount: function() {
       var res = 0;
       for (var i = 0, len = peers.length; i < len; i++) {
@@ -42,6 +52,11 @@ angular.module('streamrootTestApp')
       return res;
     },
 
+    /**
+     * Localy connect a peer.
+     * @param {Object} peer  The peer object to connect.
+     * @param {Boolean} value The value to set to the connection.
+     */
     setConnected: function(peer, value) {
       if (peer) {
         if (value === true) {
@@ -55,6 +70,11 @@ angular.module('streamrootTestApp')
       }
     },
 
+    /**
+     * Get peer by a specific id;
+     * @param {String} peerId   Id of the peer to find.
+     * @return {Object}         Found peer.
+     */
     getById: function(peerId) {
       for (var i = 0, len = peers.length; i < len; i++) {
         if (peers[i]._id === peerId) {
@@ -64,6 +84,10 @@ angular.module('streamrootTestApp')
       return null;
     },
 
+    /**
+     * Get all connected peers.
+     * @return  {[Object]}  An array of the connected peers.
+     */
     getConnected: function() {
       var _peers = [];
       for (var i = 0, len = peers.length; i < len; i++) {
@@ -71,10 +95,15 @@ angular.module('streamrootTestApp')
           _peers.push(peers[i]);
         }
       }
-
       return _peers;
     },
 
+    /**
+     * Send a message to a specific peer.
+     * @param  {String} peerId  The targeted peer id.
+     * @param  {Object} message The message to send.
+     * @return {String}         Returns null if all was well completed and return its name if he could not send the mesaage.
+     */
     send: function(peerId, message) {
       var peer = this.getById(peerId);
 

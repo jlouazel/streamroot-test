@@ -7,6 +7,7 @@ angular.module('streamrootTestApp')
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.getRooms = Room.getAll;
 
+  $scope.getPeerById = Peer.getById;
   $scope.getPeersFromRoom = Room.getPeers;
 
 
@@ -22,10 +23,23 @@ angular.module('streamrootTestApp')
   $scope.$on('update', function() { $scope.$digest(); });
   $scope.$on('room:active', function(e, room) {
     $scope.currentRoom = room;
-    $scope.$apply();
   });
 
-  $scope.addUser = Room.addUser;
+  $scope.addUser = function(peerId) {
+    Room.send($scope.currentRoom, {
+      type: 'command',
+      sender: $scope.getCurrentUser()._id,
+      users: $scope.currentRoom.users,
+      body: {
+        name: 'AddUser',
+        newUser: peerId
+      },
+      room: $scope.currentRoom.id,
+      timeStamp: Date.now()
+    });
+
+    Room.addUser($scope.currentRoom, peerId);
+  };
 
   $scope.isInRoom = Room.isInRoom;
 
@@ -33,7 +47,6 @@ angular.module('streamrootTestApp')
   $scope.setRoomActive = function(peerId) {
     var room = Room.findByPeerIds([peerId]);
 
-    // If the rooms does not yet exists.
     if (!room) {
       room = Room.create();
       Room.addUser(room, peerId);

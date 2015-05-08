@@ -28,7 +28,7 @@
     </li>
   </ul>
   <div scroll-glue class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
-    <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-repeat="message in currentRoom.messages">
+    <div class="chat-message" ng-class="{'me': message.sender === getCurrentUser()._id, 'chat-primary': message.sender !== getCurrentUser()._id}" ng-if="message.type === 'text'" ng-repeat="message in currentRoom.messages">
       <div class="chat-contact">
         <img ng-src="{{ ::message.sender.picture || 'assets/images/no_photo.png'}}" alt="">
       </div>
@@ -37,7 +37,7 @@
         <small ng-if="message.sender === getCurrentUser()._id" style="font-size: 0.8em;">You
           <em style="color: #b1b1b1" ng-if="message.blind && message.blind.length === 1">({{ ::message.blind[0] }} is no longer connected and he will not see this message)</em>
           <em style="color: #b1b1b1" ng-if="message.blind && message.blind.length > 1">(One or more users of this channel are no longer connected and will not see your message)</em>
-          </small>
+        </small>
         <small style="font-size: 0.8em;float:right;">{{ ::message.timeStamp | date:"dd/MM/yyyy 'at' hh:mm:ssa" }}</small>
         <br/>
         <div ng-bind-html="message.body | enhanceText"></div>
@@ -63,7 +63,7 @@
           </button>
           <ul class="dropdown-menu" role="menu">
             <li role="presentation" class="dropdown-header">Users in room {{currentRoom.users.length + 1}}/5</li>
-            <li ng-repeat="peer in peers" ng-click="addUser(currentRoom, peer._id)" ng-show="peer.connected && !isInRoom(currentRoom, peer._id)"><a href="#">{{peer.name}}</a></li>
+            <li ng-repeat="peer in peers" ng-click="addUser(peer._id)" ng-show="peer.connected && !isInRoom(currentRoom, peer._id)"><a href="#">{{peer.name}}</a></li>
           </ul>
         </div>
 

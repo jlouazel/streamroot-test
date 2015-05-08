@@ -73,8 +73,8 @@ angular.module('streamrootTestApp')
       var peerIdsLength = peerIds.length;
 
       for (var i = 0, roomsLength = rooms.length; i < roomsLength; i++) {
+        var matches = 0;
         for (var j = 0, roomUsersLength = rooms[i].users.length; j < roomUsersLength; j++) {
-          var matches = 0;
           if (roomUsersLength === peerIdsLength) {
             for (var k = 0; k < peerIdsLength; k++) {
               if (rooms[i].users[j] === peerIds[k]) {
@@ -110,10 +110,22 @@ angular.module('streamrootTestApp')
       if (room) {
         room.active = value;
       }
+
+      var count = 0;
+      for (var i = 0, len = rooms.length; i < len; i++) {
+        if (rooms[i].active) {
+          count++;
+        }
+      }
+
+      if (count === 1) {
+        $rootScope.$broadcast('room:active', room);
+      }
     },
 
     send: function(room, message) {
       message.blind = [];
+
       for (var i = 0, len = room.users.length; i < len; i++) {
         var peerName = Peer.send(room.users[i], message);
 
@@ -143,6 +155,17 @@ angular.module('streamrootTestApp')
       Peer.setConnected(peer, value);
     },
 
+    banUser: function(room, peerId) {
+      if (room) {
+        for (var i = 0, len = room.users.length; i < len; i++) {
+          if (room.users[i] === peerId) {
+            room.users[i].splice(i, 1);
+            setName(room);
+          }
+        }
+      }
+    },
+
     handleNewMessage: function(message) {
       var users = message.users,
       sender = Peer.getById(message.sender);
@@ -154,7 +177,9 @@ angular.module('streamrootTestApp')
         users.splice(crtUserIdx, 1);
       }
 
+
       var room = this.findByPeerIds(users);
+
       if (!room) {
         room = this.create();
         for (var i = 0, len = users.length; i < len; i++) {
@@ -169,7 +194,7 @@ angular.module('streamrootTestApp')
       room.messages.push(message);
       this.setActive(room, true);
 
-      $rootScope.$broadcast('room:active', room);
+      $rootScope.$broadcast('update');
     }
   };
 });

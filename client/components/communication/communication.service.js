@@ -48,11 +48,42 @@ angular.module('streamrootTestApp')
     };
   }
 
+  function handleCommand(message) {
+    if (message.body.name === 'AddUser') {
+      var users = [];
+
+      users.push(message.sender);
+
+      for (var i = 0, len = message.users; i < len; i++) {
+        if (message.users[i] !== getCurrentUser()._id && message.users[i] !== message.body.newUser) {
+          users.push(users[i]);
+        }
+      }
+
+      var room = Room.findByPeerIds(users);
+      if (room) {
+        Room.addUser(room, message.body.newUser);
+      } else {
+        room = Room.create();
+        users.push(message.body.newUser);
+        for (var j = 0, len1 = users.length; j < len1; j++) {
+          Room.addUser(room, users[j]);
+          Room.handleNewMessage(message);
+        }
+        Room.setActive(room, true);
+        $rootScope.$broadcast('room:active', room);
+      }
+    }
+  }
+
   function handleDataChannelMessage(e) {
     var message = JSON.parse(e.data);
 
     if (message && message.type === 'text') {
       Room.handleNewMessage(message);
+    }
+    else if (message && message.type === 'command') {
+      handleCommand(message);
     }
   }
 

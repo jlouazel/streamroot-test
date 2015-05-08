@@ -156,11 +156,11 @@ angular.module('streamrootTestApp')
       Peer.setConnected(peer, value);
     },
 
-    banUser: function(room, peerId) {
+    banPeer: function(room, peerId) {
       if (room) {
         for (var i = 0, len = room.users.length; i < len; i++) {
           if (room.users[i] === peerId) {
-            room.users[i].splice(i, 1);
+            room.users.splice(i, 1);
             setName(room);
           }
         }

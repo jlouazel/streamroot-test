@@ -2,26 +2,24 @@
 
 angular.module('streamrootTestApp')
 .controller('MainCtrl', function ($scope, socket, Auth, Room, Peer) {
-
   $scope.peers = [];
-  $scope.getCurrentUser = Auth.getCurrentUser;
-  $scope.getRooms = Room.getAll;
-
-  $scope.getPeerById = Peer.getById;
-  $scope.getPeersFromRoom = Room.getPeers;
-
-  $scope.getConnectedUsersCount = Peer.getConnectedUsersCount;
-
   $scope.currentRoom = null;
 
+  // Import Auth functions.
+  $scope.getCurrentUser = Auth.getCurrentUser;
 
-  Peer.getAll(function(peers) { $scope.peers = peers; });
+  // Import Room functions.
+  $scope.getRooms = Room.getAll;
+  $scope.getPeersFromRoom = Room.getPeers;
 
-  socket.listenToWebRTC();
+  // Import Peer functions.
+  $scope.getPeerById = Peer.getById;
+  $scope.getConnectedUsersCount = Peer.getConnectedUsersCount;
 
-  $scope.$on('update', function() { $scope.$digest(); });
-  $scope.$on('room:active', function(e, room) { $scope.currentRoom = room; });
-
+  /**
+  * Add an user to the room.
+  * @param {String} peerId The id of the user to add.
+  */
   $scope.addUser = function(peerId) {
     Room.send($scope.currentRoom, {
       type: 'command',
@@ -38,9 +36,10 @@ angular.module('streamrootTestApp')
     Room.addUser($scope.currentRoom, peerId);
   };
 
-  $scope.isInRoom = Room.isInRoom;
-
-  $scope.getRoom = Room.getRoom;
+  /**
+  * Create a room if needed and focus on it if an user selects a peer on the right menu.
+  * @param {String} peerId The id of the selected peer.
+  */
   $scope.setRoomActive = function(peerId) {
     var room = Room.findByPeerIds([peerId]);
 
@@ -54,12 +53,18 @@ angular.module('streamrootTestApp')
     $scope.currentRoom = room;
   };
 
+  /**
+  * Change the focused room.
+  * @param {[type]} room [description]
+  */
   $scope.selectRoom = function(room) {
     $scope.currentRoom = room;
     room.nonRead = 0;
   };
 
-
+  /**
+  * Send a message when the user submit it.
+  */
   $scope.sendMessage = function() {
     if ($scope.message) {
 
@@ -75,4 +80,14 @@ angular.module('streamrootTestApp')
       $scope.message = '';
     }
   };
+
+  // Get all peers.
+  Peer.getAll(function(peers) { $scope.peers = peers; });
+
+  // Launch the signaling server listening.
+  socket.listenToWebRTC();
+
+  // Signals to make things happens in this scope.
+  $scope.$on('update', function() { $scope.$digest(); });
+  $scope.$on('room:active', function(e, room) { $scope.currentRoom = room; });
 });

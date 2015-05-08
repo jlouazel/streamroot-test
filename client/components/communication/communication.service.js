@@ -49,11 +49,11 @@ angular.module('streamrootTestApp')
   }
 
   function handleCommand(message) {
+    var users = [];
+
+    users.push(message.sender);
+
     if (message.body.name === 'AddUser') {
-      var users = [];
-
-      users.push(message.sender);
-
       for (var i = 0, len = message.users; i < len; i++) {
         if (message.users[i] !== getCurrentUser()._id && message.users[i] !== message.body.newUser) {
           users.push(users[i]);

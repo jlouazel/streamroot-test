@@ -6,7 +6,9 @@ angular.module('streamrootTestApp')
   $scope.peers = [];
   $scope.getCurrentUser = Auth.getCurrentUser;
   $scope.getRooms = Room.getAll;
+
   $scope.getPeersFromRoom = Room.getPeers;
+
 
   $scope.getConnectedUsersCount = Peer.getConnectedUsersCount;
 
@@ -22,6 +24,10 @@ angular.module('streamrootTestApp')
     $scope.currentRoom = room;
     $scope.$apply();
   });
+
+  $scope.addUser = Room.addUser;
+
+  $scope.isInRoom = Room.isInRoom;
 
   $scope.getRoom = Room.getRoom;
   $scope.setRoomActive = function(peerId) {

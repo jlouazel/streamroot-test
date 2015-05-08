@@ -4,8 +4,7 @@ angular.module('streamrootTestApp')
 .factory('Peer', function ($rootScope, Auth, User) {
 
   var peers = [],
-  getCurrentUser = Auth.getCurrentUser,
-  connectedUsersCount = 0;
+  getCurrentUser = Auth.getCurrentUser;
 
   $rootScope.$on('logout', function() {
     for (var i = 0, len = peers.length; i < len; i++) {

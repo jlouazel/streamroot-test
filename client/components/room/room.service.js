@@ -3,7 +3,8 @@
 angular.module('streamrootTestApp')
 .factory('Room', function ($rootScope, Auth, Peer) {
   var rooms = [],
-  getCurrentUser = Auth.getCurrentUser;
+  getCurrentUser = Auth.getCurrentUser,
+  roomLimit = 5;
 
   function makeid() {
     var text = '';
@@ -13,6 +14,23 @@ angular.module('streamrootTestApp')
       text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
     return text;
+  }
+
+
+  function setName(room) {
+    room.name = '';
+
+    for (var i = 0, len = room.users.length; i < len; i++) {
+      var user = Peer.getById(room.users[i]);
+
+      if (user) {
+        if (i !== 0) {
+          room.name += ', ';
+        }
+
+        room.name += user.name;
+      }
+    }
   }
 
   return {
@@ -51,20 +69,6 @@ angular.module('streamrootTestApp')
       return peers;
     },
 
-    setName: function(room) {
-      room.name = '';
-
-      for (var i = 0, len = room.users.length; i < len; i++) {
-        var user = Peer.getById(room.users[i]);
-
-        if (i !== 0) {
-          room.name += ' ';
-        }
-
-        room.name += user.name;
-      }
-    },
-
     findByPeerIds: function(peerIds) {
       var peerIdsLength = peerIds.length;
 
@@ -96,9 +100,9 @@ angular.module('streamrootTestApp')
     },
 
     addUser: function(room, userId) {
-      if (room) {
+      if (room && room.users.length + 1 < roomLimit) {
         room.users.push(userId);
-        this.setName(room);
+        setName(room);
       }
     },
 
@@ -118,6 +122,17 @@ angular.module('streamrootTestApp')
         }
       }
       room.messages.push(message);
+    },
+
+    isInRoom: function(room, peerId) {
+      if (room) {
+        for (var i = 0, len = room.users.length; i < len; i++) {
+          if (room.users[i] === peerId) {
+            return true;
+          }
+        }
+      }
+      return false;
     },
 
     getPeerById: function(peerId) {

@@ -10,6 +10,7 @@ angular.module('streamrootTestApp')
 
   // Import Room functions.
   $scope.getRooms = Room.getAll;
+  $scope.isInRoom = Room.isInRoom;
   $scope.getPeersFromRoom = Room.getPeers;
 
   // Import Peer functions.
@@ -55,7 +56,7 @@ angular.module('streamrootTestApp')
 
   /**
   * Change the focused room.
-  * @param {[type]} room [description]
+  * @param {Object} room Selected room;
   */
   $scope.selectRoom = function(room) {
     $scope.currentRoom = room;

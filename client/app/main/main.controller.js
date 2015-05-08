@@ -10,7 +10,6 @@ angular.module('streamrootTestApp')
   $scope.getPeerById = Peer.getById;
   $scope.getPeersFromRoom = Room.getPeers;
 
-
   $scope.getConnectedUsersCount = Peer.getConnectedUsersCount;
 
   $scope.currentRoom = null;
@@ -21,9 +20,7 @@ angular.module('streamrootTestApp')
   socket.listenToWebRTC();
 
   $scope.$on('update', function() { $scope.$digest(); });
-  $scope.$on('room:active', function(e, room) {
-    $scope.currentRoom = room;
-  });
+  $scope.$on('room:active', function(e, room) { $scope.currentRoom = room; });
 
   $scope.addUser = function(peerId) {
     Room.send($scope.currentRoom, {
@@ -53,13 +50,13 @@ angular.module('streamrootTestApp')
     }
 
     Room.setActive(room, true);
-    if (!$scope.currentRoom) {
-      $scope.currentRoom = room;
-    }
+    room.nonRead = 0;
+    $scope.currentRoom = room;
   };
 
   $scope.selectRoom = function(room) {
     $scope.currentRoom = room;
+    room.nonRead = 0;
   };
 
 

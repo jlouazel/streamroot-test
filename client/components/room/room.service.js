@@ -46,6 +46,7 @@ angular.module('streamrootTestApp')
         name: '',
         messages: [],
         picture: null,
+        nonRead: 0,
         users: [],
         active: false
       };
@@ -192,8 +193,8 @@ angular.module('streamrootTestApp')
       }
 
       room.messages.push(message);
+      room.nonRead++;
       this.setActive(room, true);
-
       $rootScope.$broadcast('update');
     }
   };

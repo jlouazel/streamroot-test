@@ -24,7 +24,7 @@
       <ul class="dropdown-menu"></ul>
     </li>
     <li ng-class="{'active': room.id === currentRoom.id}" ng-repeat="room in getRooms()" ng-click="selectRoom(room)">
-      <a ng-show="room.active" data-toggle="tab" aria-expanded="true">{{ room.name }}</a>
+      <a ng-show="room.active" data-toggle="tab" aria-expanded="true">{{ room.name }} <span ng-show="room !== currentRoom && room.nonRead !== 0" style="float:right!important;margin-left:5px;position:relative!important;top:0px!important;left:0px!important;" class="badge badge-danger">{{ room.nonRead }}</span></a>
     </li>
   </ul>
   <div scroll-glue class="panel-chat well" id="chat" tabindex="5000" style="overflow-y: auto; outline: none;">
@@ -87,7 +87,7 @@
         </li>
         <hr class="outsider">
         <h4>Offline<small> ({{ peers.length - getConnectedUsersCount() }})</small></h4>
-        <li data-stats="offline" ng-repeat="peer in peers" ng-show="!peer.connected" ng-click="test(peer._id)">
+        <li data-stats="offline" ng-repeat="peer in peers" ng-show="!peer.connected">
           <a href="#">
             <img ng-src="{{ peer.picture || 'assets/images/no_photo.png'}}" alt="">
             <span>{{ peer.name }}<img style="padding: 5px;" ng-show="peer.checking" src="assets/loader/loader.gif" alt="Loader"></span>
